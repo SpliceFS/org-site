@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpliceFS compared</title>
+<meta name="description" content="An honest comparison of SpliceFS, an alpha project, with NFS, SMB, CephFS, GlusterFS, BitTorrent mounts, Resilio Sync, Syncthing and Rclone: what each aims to be and where it is today.">
+<style>
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #59636e;
+  --border: #d1d9e0;
+  --accent: #0b6b85;
+  --hover-bg: #f6f8fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #9198a1;
+    --border: #30363d;
+    --accent: #4fc3dc;
+    --hover-bg: #161b22;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 1px solid var(--border); }
+header.top .wrap { display: flex; align-items: baseline; justify-content: space-between; padding-top: 16px; padding-bottom: 16px; }
+.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+header.top a { font-size: 14px; }
+main { padding: 48px 0 24px; }
+h1 { font-size: 32px; line-height: 1.2; margin: 0 0 16px; letter-spacing: -0.02em; }
+p { margin: 0 0 16px; }
+.links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 32px 0 0; padding: 0; list-style: none; }
+.card {
+  display: block; height: 100%; padding: 16px; text-decoration: none; color: var(--fg);
+  border: 1px solid var(--border); border-radius: 8px;
+  transition: border-color .15s, background-color .15s;
+}
+.card:hover { border-color: var(--accent); background: var(--hover-bg); }
+.card strong { display: block; font-weight: 600; }
+.card span { display: block; font-size: 14px; color: var(--muted); }
+h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 8px; }
+.small { font-size: 14px; color: var(--muted); }
+.status { border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; }
+.status-row { display: flex; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); }
+.status-row:first-child { border-top: 0; }
+.status-name { flex: 0 0 150px; }
+.status-name a { font-weight: 600; text-decoration: none; }
+.status-name span { display: block; font-size: 13px; color: var(--muted); }
+.status-badges { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.status-badges img { display: block; height: 20px; }
+@media (max-width: 560px) { .status-row { flex-direction: column; align-items: flex-start; gap: 8px; } .status-name { flex: none; } }
+footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 48px; font-size: 14px; color: var(--muted); }
+@media (max-width: 560px) { .links { grid-template-columns: 1fr; } h1 { font-size: 26px; } }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+:root { --yes: #1a7f37; --part: #9a6700; --no: #cf222e; --na: #59636e; }
+@media (prefers-color-scheme: dark) { :root { --yes: #3fb950; --part: #d29922; --no: #f85149; --na: #9198a1; } }
+.wide { max-width: 2000px; margin: 0 auto; padding: 0 16px; }
+.lede { font-size: 18px; }
+.today { border: 1px solid var(--border); border-left: 4px solid var(--part); border-radius: 8px; padding: 16px 20px; margin: 24px 0 0; }
+.today h2 { margin: 0 0 8px; font-size: 20px; }
+.today ul { margin: 0 0 12px; padding-left: 20px; }
+.today li { margin: 0 0 4px; }
+.today p { margin: 0; }
+.pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0 0; padding: 0; list-style: none; }
+.pillar { height: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.pillar h3 { margin: 0 0 8px; font-size: 17px; }
+.pillar ul { margin: 0; padding-left: 18px; font-size: 15px; }
+.pillar li { margin: 0 0 6px; }
+.pillar .gap { color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 14px; }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.st { display: flex; align-items: center; gap: 6px; }
+.st svg { flex: none; width: 18px; height: 18px; }
+.st.yes { color: var(--yes); } .st.part { color: var(--part); } .st.no { color: var(--no); } .st.na { color: var(--na); }
+.st.lvl1 { color: var(--no); } .st.lvl2, .st.lvl3 { color: var(--part); } .st.lvl4, .st.lvl5 { color: var(--yes); }
+.tx { display: block; margin-top: 4px; color: var(--fg); }
+.meter { display: flex; gap: 3px; margin: 2px 0 6px; }
+.meter i { width: 18px; height: 6px; border-radius: 3px; background: var(--border); }
+.meter i.on { background: var(--accent); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; }
+table { border-collapse: collapse; width: 100%; min-width: 1960px; font-size: 14px; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--border); }
+thead th { border-top: 0; font-size: 15px; background: var(--hover-bg); }
+thead .sub { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+tbody th { font-weight: 600; width: 9%; position: sticky; left: 0; background: var(--bg); }
+td { width: 10.1%; }
+tbody td:nth-child(2), thead th:nth-child(2) { background: var(--hover-bg); }
+thead th:nth-child(2) { color: var(--accent); }
+.plan { margin: 16px 0 0; padding: 0; list-style: none; border: 1px solid var(--border); border-radius: 8px; }
+.plan li { display: flex; gap: 16px; padding: 12px 16px; border-top: 1px solid var(--border); }
+.plan li:first-child { border-top: 0; }
+.plan strong { flex: 0 0 110px; }
+@media (max-width: 760px) { .pillars { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .plan li { flex-direction: column; gap: 2px; } .plan strong { flex: none; } }
+thead .grp { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--bg); border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); }
+thead .grp:first-child { border-left: 0; }
+tbody td:nth-child(3), tbody td:nth-child(5), tbody td:nth-child(7), tbody td:nth-child(10),
+thead tr:last-child th:nth-child(3), thead tr:last-child th:nth-child(5), thead tr:last-child th:nth-child(7), thead tr:last-child th:nth-child(10) { border-left: 1px solid var(--border); }
+.dest { margin: 16px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+.dest li { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; }
+.dest strong { display: block; }
+.dest span { font-size: 14px; color: var(--muted); }
+@media (max-width: 560px) { .dest { grid-template-columns: 1fr; } }
+/* pinned columns, alignment buttons */
+.table-wrap { --w-label: 150px; --w-own: 240px; --w-col: 215px; scroll-snap-type: x proximity; scroll-padding-left: calc(var(--w-label) + var(--w-own)); overscroll-behavior-x: contain; }
+.table-inner { display: flex; width: max-content; }
+.table-spacer { flex: none; width: 0; }
+table { table-layout: fixed; border-collapse: separate; border-spacing: 0; min-width: 0; width: calc(var(--w-label) + var(--w-own) + 8 * var(--w-col)); }
+col.c-label { width: var(--w-label); } col.c-own { width: var(--w-own); } col.c-col { width: var(--w-col); }
+td, tbody th { width: auto; }
+thead th:first-child, tbody th { position: sticky; left: 0; z-index: 2; background: var(--bg); }
+thead th:nth-child(2), tbody td:nth-child(2) { position: sticky; left: var(--w-label); z-index: 2; background: var(--hover-bg); box-shadow: 1px 0 0 var(--border), 8px 0 8px -8px rgba(0, 0, 0, .35); }
+thead tr:last-child th:nth-child(n+3) { scroll-snap-align: start; }
+.jump { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; font-weight: 600; }
+.jump:hover, .jump[aria-pressed="true"] { color: var(--accent); }
+.jump:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; padding: 8px 0; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 14px; }
+.pick span { color: var(--muted); margin-right: 4px; }
+.pick button { font: inherit; font-size: 13px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg); color: var(--fg); cursor: pointer; }
+.pick button:hover { border-color: var(--accent); }
+.pick button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.table-wrap { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; border-top: 0; }
+@media (max-width: 760px) { .table-wrap { --w-label: 86px; --w-own: 138px; --w-col: 150px; } table { font-size: 12.5px; } th, td { padding: 8px; } .meter i { width: 12px; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-yes" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-part" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></symbol>
+  <symbol id="i-no" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-na" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="/" style="font-size:20px;text-decoration:none;color:inherit">SpliceFS</a>
+    <a href="https://github.com/SpliceFS">GitHub</a>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <h1>How SpliceFS compares</h1>
+    <p class="lede">SpliceFS aims to become a complete distributed filesystem. Today it is step one of that road: a read-only share where a reader pulls the same files from several servers at once. The other systems on this page are mature. This page says plainly what each one aims to be, and how far along it is.</p>
+
+    <div class="today">
+      <h2>Where SpliceFS is today</h2>
+      <ul>
+        <li>It is alpha software. No version has been released.</li>
+        <li>It has never run in production. Its own tests are the only proof that it works.</li>
+        <li>Its protocol and its configuration may still change.</li>
+        <li>It only reads. Writing, file locks and keeping copies in step are plans, not features.</li>
+        <li>Its access control is basic: users with a password and a list of shares.</li>
+        <li>Nobody outside the project has reviewed its security, and no speed measurements are published.</li>
+        <li>It runs on Linux and macOS. There is no Windows version.</li>
+      </ul>
+      <p>It does not replace any system on this page today. If you need something to depend on now, use one of them.</p>
+    </div>
+  </div>
+
+  <div class="wide">
+    <h2>Side by side</h2>
+    <p class="small">The other systems are described as they are usually deployed. Each has options this table leaves out. The row titles and the SpliceFS column stay in place. Scroll the rest sideways, or tap a system to put it next to SpliceFS.</p>
+    <ul class="legend">
+      <li><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg></span>Yes, or a strength</li>
+      <li><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg></span>Partly, or with limits</li>
+      <li><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg></span>No, not yet, or a weakness</li>
+      <li><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg></span>Does not apply</li>
+      <li><span class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>How far along its own road, out of five</li>
+    </ul>
+    <div class="pick" role="group" aria-label="Put a system next to SpliceFS"><span>Next to SpliceFS:</span><button type="button" data-col="2" aria-pressed="false">NFS</button><button type="button" data-col="3" aria-pressed="false">SMB</button><button type="button" data-col="4" aria-pressed="false">CephFS</button><button type="button" data-col="5" aria-pressed="false">GlusterFS</button><button type="button" data-col="6" aria-pressed="false">BitTorrent mounts</button><button type="button" data-col="7" aria-pressed="false">Resilio Sync</button><button type="button" data-col="8" aria-pressed="false">Syncthing</button><button type="button" data-col="9" aria-pressed="false">Rclone</button></div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Comparison of SpliceFS with NFS, SMB, CephFS, GlusterFS, BitTorrent mounts, Resilio Sync, Syncthing and Rclone">
+      <div class="table-inner"><table>
+        <colgroup><col class="c-label"><col class="c-own"><col class="c-col"><col class="c-col"><col class="c-col"><col class="c-col"><col class="c-col"><col class="c-col"><col class="c-col"><col class="c-col"></colgroup>
+        <thead>
+          <tr><th class="grp"></th><th scope="colgroup" colspan="1" class="grp">This project</th><th scope="colgroup" colspan="2" class="grp">Network shares</th><th scope="colgroup" colspan="2" class="grp">Cluster filesystems</th><th scope="colgroup" colspan="3" class="grp">Peer to peer</th><th scope="colgroup" colspan="1" class="grp">Cloud storage tool</th></tr>
+          <tr><th scope="col"></th><th scope="col">SpliceFS</th><th scope="col"><button type="button" class="jump" data-col="2" title="Show NFS next to SpliceFS">NFS</button></th><th scope="col"><button type="button" class="jump" data-col="3" title="Show SMB next to SpliceFS">SMB</button></th><th scope="col"><button type="button" class="jump" data-col="4" title="Show CephFS next to SpliceFS">CephFS</button></th><th scope="col"><button type="button" class="jump" data-col="5" title="Show GlusterFS next to SpliceFS">GlusterFS</button></th><th scope="col"><button type="button" class="jump" data-col="6" title="Show BitTorrent mounts next to SpliceFS">BitTorrent mounts<span class="sub">btfs and similar</span></button></th><th scope="col"><button type="button" class="jump" data-col="7" title="Show Resilio Sync next to SpliceFS">Resilio Sync</button></th><th scope="col"><button type="button" class="jump" data-col="8" title="Show Syncthing next to SpliceFS">Syncthing</button></th><th scope="col"><button type="button" class="jump" data-col="9" title="Show Rclone next to SpliceFS">Rclone</button></th></tr>
+        </thead>
+        <tbody>
+        <tr><th scope="row">Aims to be</th><td>A complete distributed filesystem: read and write, cohorts of servers like RAID, transactional changes, distributed locks, full POSIX behavior, the same for local and remote clients, with data kept where you choose. Read-only is step one.</td><td>The standard network file share of Unix systems</td><td>The standard network file share of Windows and offices</td><td>A complete filesystem on a self-healing storage cluster, at any size</td><td>A scale-out filesystem on ordinary servers, with no metadata server</td><td>A fixed set of files shared by a swarm of peers, mounted as a folder</td><td>Fast peer-to-peer sync of folders between devices, with no central server</td><td>Open, private, continuous sync of folders between your own devices</td><td>One tool to copy, sync and mount files on any cloud storage</td></tr>
+        <tr><th scope="row">Where it is on that road</th><td><span class="meter" role="img" aria-label="1 of 5"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><span class="st lvl1"><b>Step one, alpha</b></span><span class="tx">A read-only share today. Works end to end in its own tests on Linux and macOS. Never released, never run in production.</span></td><td><span class="meter" role="img" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="st lvl5"><b>Mature</b></span><span class="tx">Decades in production. Built into every major operating system.</span></td><td><span class="meter" role="img" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="st lvl5"><b>Mature</b></span><span class="tx">Decades in production. Built into Windows, macOS and Linux.</span></td><td><span class="meter" role="img" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="st lvl5"><b>Mature</b></span><span class="tx">Runs very large production clusters. Takes a skilled team to operate.</span></td><td><span class="meter" role="img" aria-label="4 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><span class="st lvl4"><b>Mature, slowing</b></span><span class="tx">Years of production use. Development slowed after Red Hat ended its product in 2024.</span></td><td><span class="meter" role="img" aria-label="3 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><span class="st lvl3"><b>Proven protocol, small tools</b></span><span class="tx">The protocol is proven at huge scale. The tools that mount it as a folder are small projects.</span></td><td><span class="meter" role="img" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="st lvl5"><b>Mature</b></span><span class="tx">A commercial, closed-source product in wide use since 2013.</span></td><td><span class="meter" role="img" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="st lvl5"><b>Mature</b></span><span class="tx">Open source, in wide use for more than ten years.</span></td><td><span class="meter" role="img" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="st lvl5"><b>Mature</b></span><span class="tx">Open source, in wide use since 2012, with more than 70 storage services.</span></td></tr>
+        <tr><th scope="row">Writes</th><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Not yet</b></span><span class="tx">Read-only is step one. Read and write is planned.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Read-only, and the set of files is fixed when the torrent is made.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Two-way sync.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Two-way sync.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">A mount writes through a local cache.</span></td></tr>
+        <tr><th scope="row">File locks</th><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Not yet</b></span><span class="tx">Distributed locks are planned.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">Nothing can be changed.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Two edits at once make a conflict copy.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Two edits at once make a conflict copy.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">No locks between clients.</span></td></tr>
+        <tr><th scope="row">POSIX behavior</th><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Reading only</b></span><span class="tx">Reading works like a local folder. Full POSIX behavior is the aim.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Close</b></span><span class="tx">Close to a local filesystem, with known gaps.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Windows rules first. POSIX extensions on Linux.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Close</b></span><span class="tx">Close to complete.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Close</b></span><span class="tx">Close to complete.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Reading only</b></span><span class="tx">Reading works like a local folder.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">The files are ordinary local files.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">The files are ordinary local files.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">A mount covers the common cases, not all.</span></td></tr>
+        <tr><th scope="row">Files stay plain files</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Plain files</b></span><span class="tx">Ordinary files in ordinary folders on each server. Nothing to import or convert; the server only reads them.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Plain files</b></span><span class="tx">Ordinary files on the server&#x27;s own filesystem.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Plain files</b></span><span class="tx">Ordinary files on the server&#x27;s own filesystem.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Own storage</b></span><span class="tx">Files are split into objects inside Ceph&#x27;s own store. Data must be copied in and can only be read back through Ceph.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Mostly plain</b></span><span class="tx">Replicated volumes keep ordinary files on each server, with extra attributes. Dispersed volumes keep encoded pieces.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Plain, plus a torrent</b></span><span class="tx">Ordinary files at the peers, plus a torrent file that must be made from them first.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Plain files</b></span><span class="tx">Ordinary files in ordinary folders, plus a hidden folder for its own records.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Plain files</b></span><span class="tx">Ordinary files in ordinary folders, plus a hidden marker and its own index.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>By service</b></span><span class="tx">Whatever the storage service keeps: objects in a bucket or files on a server. Encoded only if you turn on its encryption.</span></td></tr>
+        <tr><th scope="row">Reads without a full local copy</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Streams on demand.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Fetches pieces on demand.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Selective sync, in paid editions.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Every device holds a full copy of what it syncs.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">A mount streams on demand.</span></td></tr>
+        <tr><th scope="row">Caches what you read on local disk</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Built in</b></span><span class="tx">Keeps the blocks you read, within limits for size, age and free space. Fully cached files can be read with no server reachable.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Optional</b></span><span class="tx">Not by default. Linux can add a disk cache with a separate service.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Windows only</b></span><span class="tx">Offline files on Windows. Not on other systems.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Optional</b></span><span class="tx">Memory by default. A disk cache can be added on Linux.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Memory only</b></span><span class="tx">Memory caches only.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Built in</b></span><span class="tx">Keeps the pieces it has fetched.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">It keeps full copies, not a cache.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">It keeps full copies, not a cache.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Built in</b></span><span class="tx">A mount can keep what it reads, within limits for size and age.</span></td></tr>
+        <tr><th scope="row">One file read from several sources at once</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">The one job it does today. Shown in its tests, not yet in production.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Not in the usual setup. Parallel NFS needs servers built for it.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Multichannel adds network paths to the same server.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Inside the cluster: a file is spread over many storage daemons.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Dispersed volumes read from several servers. Replicated volumes read from one.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">From every peer that has the pieces.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">From every device that has the file.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Pulls blocks from several devices.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Several streams, all from one source.</span></td></tr>
+        <tr><th scope="row">A source fails during a read</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Continues</b></span><span class="tx">The read continues from the other servers. Tested, not yet proven in production.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Waits</b></span><span class="tx">The read waits until the server is back.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Depends</b></span><span class="tx">The read fails or reconnects. Failover needs a server cluster.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Continues</b></span><span class="tx">The cluster serves the data from another copy.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Continues</b></span><span class="tx">The client continues from another copy.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Continues</b></span><span class="tx">The read continues from other peers.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Continues</b></span><span class="tx">The transfer continues from other devices.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Continues</b></span><span class="tx">The transfer continues from other devices.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Retries</b></span><span class="tx">It tries the same source again.</span></td></tr>
+        <tr><th scope="row">Keeps the copies in step</th><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Not yet</b></span><span class="tx">Today another tool must do it. Cohorts of servers, like RAID, are planned.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">There is one copy.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Replication is a separate Windows service.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Built in.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Built in.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">For a fixed set of files. Any change needs a new torrent.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Its whole job.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Its whole job.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>On demand</b></span><span class="tx">When you run a sync.</span></td></tr>
+        <tr><th scope="row">Notices a wrong or damaged copy</th><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Compares size, modification time and a digest of the start of each file. No checksums of the whole content yet.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">There is one copy.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">There is one copy.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Checksums on stored data and regular scrubbing.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Bit-rot detection is optional.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Every piece is checked against its hash.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Every piece is checked against its hash.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Every block is checked against its hash.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Checksums where the storage service has them.</span></td></tr>
+        <tr><th scope="row">Readers see changes to the files</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">After the listing cache expires, 30 seconds by default.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">A torrent is a snapshot.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">After the sync.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">After the sync.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">After the directory cache expires.</span></td></tr>
+        <tr><th scope="row">Choose where the data lives</th><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Not yet</b></span><span class="tx">Planned for a file, a directory or a whole cluster.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">One server.</span></td><td><span class="st na"><svg aria-hidden="true"><use href="#i-na"/></svg><b>Does not apply</b></span><span class="tx">One server.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Placement rules by location, set per directory.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Per volume, and replication between sites.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Wherever the peers are.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Per folder: you choose the devices.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Per folder: you choose the devices.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Partly</b></span><span class="tx">Per path: you choose the storage service.</span></td></tr>
+        <tr><th scope="row">Access control</th><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Basic</b></span><span class="tx">Users with a password and a list of shares each. No groups, no per-file permissions, no directory service. More is the work of versions 0.x.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Full</b></span><span class="tx">Unix permissions and ACLs. Kerberos for real user identity.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Full</b></span><span class="tx">Users, groups and ACLs, with Active Directory.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Full</b></span><span class="tx">Keys limited to paths, plus Unix permissions.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Full</b></span><span class="tx">Unix permissions and ACLs, and client address lists.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>None</b></span><span class="tx">Anyone who has the torrent can read it.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Per folder</b></span><span class="tx">Keys per folder: read-only, or read and write. Users in business editions.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Per device</b></span><span class="tx">Per folder and device, with send-only and receive-only folders. No users.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>From the service</b></span><span class="tx">Whatever the storage service has.</span></td></tr>
+        <tr><th scope="row">Encryption in transit</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>On by default</b></span><span class="tx">TLS, on by default. A new server makes its own certificate, which clients do not trust until you install a real one or put a proxy in front.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Optional</b></span><span class="tx">Kerberos privacy, or RPC over TLS.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Optional</b></span><span class="tx">SMB 3 encryption.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Optional</b></span><span class="tx">The secure mode of its protocol.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Optional</b></span><span class="tx">TLS.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>Weak</b></span><span class="tx">Optional obfuscation only, not real secrecy.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Always on</b></span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Always on</b></span><span class="tx">TLS.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Usually</b></span><span class="tx">HTTPS or SSH for most storage services.</span></td></tr>
+        <tr><th scope="row">Use across the internet</th><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">One HTTPS port, directly or behind a reverse proxy.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Not advised without a VPN.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Not advised without a VPN. Port 445 is widely blocked.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Readers must reach every daemon of the cluster.</span></td><td><span class="st no"><svg aria-hidden="true"><use href="#i-no"/></svg><b>No</b></span><span class="tx">Readers must reach every storage server.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Built for it.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Relays and trackers get through firewalls.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Discovery and relays get through firewalls.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Yes</b></span><span class="tx">Built for it.</span></td></tr>
+        <tr><th scope="row">Monitoring and admin tools</th><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Minimal</b></span><span class="tx">A status command and logs. Nothing more yet. This is the work of versions 1.x.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Rich</b></span><span class="tx">Mature tools in every operating system.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Rich</b></span><span class="tx">Mature tools, strongest on Windows.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Rich</b></span><span class="tx">Dashboard, metrics and orchestration.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Rich</b></span><span class="tx">Command line tools and metrics exporters.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Minimal</b></span><span class="tx">Whatever the client program shows.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>By edition</b></span><span class="tx">The app. A management console in business editions.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Good</b></span><span class="tx">Web interface, API and metrics.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Good</b></span><span class="tx">Statistics, a remote control API and metrics.</span></td></tr>
+        <tr><th scope="row">Runs on</th><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Two systems</b></span><span class="tx">Linux and macOS. No Windows. No FreeBSD package yet.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Everywhere</b></span><span class="tx">Every major operating system.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Everywhere</b></span><span class="tx">Every major operating system.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Mostly Linux</b></span><span class="tx">Linux servers. Clients for Linux and Windows.</span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Linux</b></span></td><td><span class="st part"><svg aria-hidden="true"><use href="#i-part"/></svg><b>Two systems</b></span><span class="tx">Linux and macOS, through FUSE.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Everywhere</b></span><span class="tx">Windows, macOS, Linux, NAS devices and phones.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Almost everywhere</b></span><span class="tx">Windows, macOS, Linux, BSD and Android.</span></td><td><span class="st yes"><svg aria-hidden="true"><use href="#i-yes"/></svg><b>Everywhere</b></span><span class="tx">Windows, macOS, Linux and BSD.</span></td></tr>
+        <tr><th scope="row">Protocol on the wire</th><td>HTTPS: JSON listings and HTTP byte ranges</td><td>NFS over RPC, port 2049</td><td>SMB, port 445</td><td>Ceph&#x27;s own protocol</td><td>Gluster&#x27;s own protocol</td><td>BitTorrent, with trackers or a distributed hash table</td><td>Its own, built on BitTorrent</td><td>Its own Block Exchange Protocol, over TLS</td><td>The protocol of each storage service: S3, SFTP, WebDAV and others</td></tr>
+        <tr><th scope="row">What runs on the servers</th><td>One program. No database, no cluster state, no quorum</td><td>The kernel&#x27;s NFS server and its helper daemons</td><td>Samba or Windows Server, often with a directory service</td><td>Monitors, managers, metadata servers and storage daemons, with a quorum</td><td>A management daemon and a process per storage folder on each server</td><td>Any BitTorrent client that seeds the files</td><td>Nothing central. The app on every device</td><td>Nothing central. Syncthing on every device</td><td>Nothing of its own. It uses the storage service</td></tr>
+        </tbody>
+      </table><div class="table-spacer" aria-hidden="true"></div></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h2>Where SpliceFS is headed</h2>
+    <p>Read-only is step one. None of the following exists yet; it is what the project is building toward.</p>
+    <ul class="dest">
+      <li><strong>Read and write</strong><span>Change files through the mount, not only read them.</span></li>
+      <li><strong>Cohorts</strong><span>Groups of servers that hold redundant copies, like RAID.</span></li>
+      <li><strong>Transactional file changes</strong><span>A change is applied completely or not at all.</span></li>
+      <li><strong>Distributed file locks</strong><span>Locks that hold across every server and every client.</span></li>
+      <li><strong>Full POSIX behavior</strong><span>Programs see what they would see on a local disk.</span></li>
+      <li><strong>Local and remote clients alike</strong><span>The same service on the local network, over the public internet or over a VPN.</span></li>
+      <li><strong>Geographic tenancy</strong><span>Choose where data lives, for a file, a directory or a whole cluster.</span></li>
+    </ul>
+
+    <h2>The plan by version</h2>
+    <ul class="plan">
+      <li><strong>Versions 0.x</strong><span>The core of the SpliceFS protocol, and access controls.</span></li>
+      <li><strong>Versions 1.x</strong><span>Enterprise tooling and visibility.</span></li>
+      <li><strong>Versions 2.x</strong><span>Only time will tell.</span></li>
+    </ul>
+    <p class="small" style="margin-top:16px">These are plans, not features. No version has been released yet; the first release starts the 0.x line.</p>
+
+    <h2>What is built so far</h2>
+    <p>The design keeps to three aims. The grey lines say what is still missing.</p>
+    <ul class="pillars">
+      <li><div class="pillar"><h3>Lean</h3><ul>
+        <li>One program on each server and one on the reader.</li>
+        <li>No database, no cluster manager, no quorum.</li>
+        <li>The server keeps nothing about its readers.</li>
+        <li>One server is a valid cluster.</li>
+        <li class="gap">Today lean also means less: no writes, no replication, no locking yet.</li>
+      </ul></div></li>
+      <li><div class="pillar"><h3>Standard</h3><ul>
+        <li>Everything travels over HTTPS.</li>
+        <li>Folder listings are JSON. File contents are ordinary HTTP byte ranges.</li>
+        <li>Every request can be repeated with curl.</li>
+        <li class="gap">The API on top of HTTPS is its own, and it is not frozen yet.</li>
+      </ul></div></li>
+      <li><div class="pillar"><h3>Secure</h3><ul>
+        <li>TLS is on from the first start.</li>
+        <li>Passwords are stored as Argon2id hashes.</li>
+        <li>A login gives a short-lived signed token, limited to the shares that user may read.</li>
+        <li>The server never writes to a share.</li>
+        <li class="gap">No outside security review yet.</li>
+        <li class="gap">A token cannot be revoked before it expires, 30 minutes by default.</li>
+      </ul></div></li>
+    </ul>
+
+    <h2>When to use something else</h2>
+    <p>Today, in most cases. Use NFS or SMB for a normal shared folder. Use CephFS or GlusterFS when the storage system itself must keep copies in step. Use Syncthing or Resilio Sync to keep full copies of a folder on several devices. Use Rclone to reach cloud storage. Use BitTorrent to hand a fixed set of files to many people. SpliceFS is worth a look today only if you want to read the same live folder from several servers at once across the internet, and you can accept alpha software.</p>
+  </div>
+</main>
+<footer>
+  <div class="wrap">SpliceFS is open source under the MIT license.</div>
+</footer>
+<script>
+(function () {
+  var wrap = document.querySelector('.table-wrap');
+  if (!wrap) { return; }
+  var table = wrap.querySelector('table');
+  var head = table.tHead.rows[table.tHead.rows.length - 1].cells;
+  var spacer = wrap.querySelector('.table-spacer');
+  var buttons = document.querySelectorAll('[data-col]');
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function pinned() { return head[0].offsetWidth + head[1].offsetWidth; }
+  // Room after the last column, so that every column can be brought next to SpliceFS
+  // even when the whole table would fit on the screen.
+  function size() {
+    spacer.style.width = Math.max(0, wrap.clientWidth - pinned() - head[head.length - 1].offsetWidth) + 'px';
+  }
+  function target(i) { return head[i].offsetLeft - pinned(); }
+  function mark() {
+    var best = 2, gap = Infinity;
+    for (var i = 2; i < head.length; i++) {
+      var d = Math.abs(target(i) - wrap.scrollLeft);
+      if (d < gap) { gap = d; best = i; }
+    }
+    for (var j = 0; j < buttons.length; j++) {
+      buttons[j].setAttribute('aria-pressed', String(Number(buttons[j].getAttribute('data-col')) === best));
+    }
+  }
+  for (var k = 0; k < buttons.length; k++) {
+    buttons[k].addEventListener('click', function () {
+      wrap.scrollTo({ left: target(Number(this.getAttribute('data-col'))), behavior: calm ? 'auto' : 'smooth' });
+    });
+  }
+  var waiting = false;
+  wrap.addEventListener('scroll', function () {
+    if (waiting) { return; }
+    waiting = true;
+    window.requestAnimationFrame(function () { waiting = false; mark(); });
+  });
+  window.addEventListener('resize', function () { size(); mark(); });
+  size();
+  mark();
+})();
+</script>
+</body>
+</html>
