@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SpliceFS</title>
-<meta name="description" content="SpliceFS mounts the files of a cluster of servers as one read-only folder and reads each file from every server that has it, at the same time.">
+<meta name="description" content="SpliceFS serves your files from all of your servers at once: faster access, and work goes on when a server fails. Read-only today, growing into a complete distributed file system.">
 <style>
 :root {
   --bg: #ffffff;
@@ -36,9 +36,12 @@ a { color: var(--accent); }
 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
 header.top { border-bottom: 1px solid var(--border); }
-header.top .wrap { display: flex; align-items: baseline; justify-content: space-between; padding-top: 16px; padding-bottom: 16px; }
-.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
-header.top a { font-size: 14px; }
+header.top .wrap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; padding-top: 16px; padding-bottom: 16px; }
+.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; color: inherit; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.nav a { font-size: 14px; text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
 main { padding: 48px 0 24px; }
 h1 { font-size: 32px; line-height: 1.2; margin: 0 0 16px; letter-spacing: -0.02em; }
 p { margin: 0 0 16px; }
@@ -65,24 +68,35 @@ h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 8px; }
 .pkg-chip { display: inline-flex; align-items: center; gap: 6px; }
 .pkg-mini { flex: 0 0 16px; width: 16px; height: 16px; }
 .pkg-note { margin: 16px 0 4px; }
-.status { border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; }
-.status-row { display: flex; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); }
-.status-row:first-child { border-top: 0; }
-.status-name { flex: 0 0 150px; }
-.status-name a { font-weight: 600; text-decoration: none; }
-.status-name span { display: block; font-size: 13px; color: var(--muted); }
-.status-badges { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
-.status-badges img { display: block; height: 20px; }
-@media (max-width: 560px) { .status-row { flex-direction: column; align-items: flex-start; gap: 8px; } .status-name { flex: none; } }
 footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 48px; font-size: 14px; color: var(--muted); }
 @media (max-width: 560px) { h1 { font-size: 26px; } }
-/* Seven tiles and five cards would each leave one alone in the last row. Spanning columns fills every row. */
+/* Seven tiles would leave one alone in the last row, so one tile spans the row. Six cards fill two rows of three. */
 @media (min-width: 641px) {
   .links { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .links li { grid-column: span 2; }
-  .links li:nth-child(-n+2) { grid-column: span 3; }
   .pkgs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pkg-wide { grid-column: 1 / -1; }
+}
+.lead { font-size: 19px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 0; }
+.btn { display: inline-block; padding: 9px 18px; border: 1px solid var(--accent); border-radius: 8px; text-decoration: none; font-weight: 600; }
+.btn.primary { background: var(--accent); color: var(--bg); }
+.btn:hover { background: var(--hover-bg); }
+.btn.primary:hover { background: var(--accent); opacity: .88; }
+.gets { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.get { padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.get strong { display: block; margin-bottom: 4px; }
+.get span { display: block; font-size: 15px; color: var(--muted); }
+.fit { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0 0; }
+.fit div { padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.fit ul { margin: 8px 0 0; padding-left: 20px; font-size: 15px; }
+.fit li { margin: 0 0 6px; }
+/* A dashed outline means planned, as in the pictures of the how-it-works page. */
+.gets.plan .get { border-style: dashed; }
+.plainlinks { margin: 0 0 16px; padding: 0; list-style: none; }
+.plainlinks li { margin: 0 0 4px; }
+@media (min-width: 641px) {
+  .gets, .fit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>
@@ -90,22 +104,66 @@ footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 
 <body>
 <header class="top">
   <div class="wrap">
-    <span class="mark">SpliceFS</span>
-    <a href="https://github.com/SpliceFS">GitHub</a>
+    <a class="mark" href="/">SpliceFS</a>
+    <nav class="nav" aria-label="Site">
+      <a href="/how-it-works/">How it works</a>
+      <a href="/compare/">Compare</a>
+      <a href="/changelog/">Change log</a>
+      <a href="https://packages.splicefs.org/">Install</a>
+      <a href="https://github.com/SpliceFS">GitHub</a>
+    </nav>
   </div>
 </header>
 <main>
   <div class="wrap">
-    <h1>One folder, streamed from several servers at once</h1>
-    <p>You give the SpliceFS client one host name. It logs in there, gets the list of every server behind that name, and from then on asks all of them. It fetches the list again every minute, so servers can join and leave.</p>
-    <ul class="how">
-      <li><strong>Finding files.</strong> When you open a folder, the client asks every server what it has there and shows you the combined answer. A server that does not have the folder says so, which costs almost nothing. The client asks it again the next time, because the folder may turn up there later.</li>
-      <li><strong>Reading files.</strong> A file is read only from the servers that said they have it. Each of them sends different blocks at the same time, so their speeds add up. The client puts the blocks in order and keeps them in a cache on local disk.</li>
-      <li><strong>Slow and failing servers.</strong> The client measures every server as it reads. A slow server gets less work, and only blocks that are not needed yet. A server that fails is rested, for one second at first and for at most thirty, and then tried again, so it carries its share again as soon as it recovers.</li>
+    <h1>Get to your data faster. Keep working when a server fails.</h1>
+    <p class="lead">SpliceFS serves your files from all of your servers at once. Today that makes reading faster and keeps it going through an outage. It is growing into a complete distributed file system, with writing, built-in redundancy and control over where your data lives.</p>
+    <p class="cta"><a class="btn primary" href="https://packages.splicefs.org/">Install</a> <a class="btn" href="/how-it-works/">See how it works</a></p>
+
+    <h2>What it does today</h2>
+    <ul class="gets">
+      <li class="get"><strong>Go faster</strong><span>Every server you add makes access faster, because all of them send data at the same time. Three servers that can each send 300 Mbit/s can give one reader up to 900.</span></li>
+      <li class="get"><strong>Stay up</strong><span>When a server slows down or fails, the others cover for it while people keep working. No single machine holds your team up.</span></li>
+      <li class="get"><strong>Spend less</strong><span>It is free and open source, and it runs on the servers and disks you already have. No special hardware.</span></li>
+      <li class="get"><strong>Start without a migration</strong><span>Your files stay where they are, as they are. Try it next to what you run today, and take it away again without losing anything.</span></li>
     </ul>
-    <p><a href="/how-it-works/">See it in pictures.</a></p>
-    <p class="small"><strong>Status: alpha, step one.</strong> Read-only is the first step toward a complete distributed filesystem. The first 0.x versions are published as packages. It has not run in production. <a href="/compare/">See how it compares with mature systems today.</a></p>
-    <h2>Native packages</h2>
+
+    <h2>What it is growing into</h2>
+    <p>Reading is the first step. These are planned and not built yet.</p>
+    <ul class="gets plan">
+      <li class="get"><strong>Write from anywhere</strong><span>Teams in every location change the same data, and a change lands everywhere or not at all.</span></li>
+      <li class="get"><strong>Redundancy built in</strong><span>Groups of servers hold data together, so losing one server loses nothing.</span></li>
+      <li class="get"><strong>Every program just works</strong><span>Locks and full POSIX behavior, so the software you already use needs no changes.</span></li>
+      <li class="get"><strong>Data where you want it</strong><span>Rules decide which locations hold which data, for one file or for everything.</span></li>
+    </ul>
+    <p><a href="/how-it-works/#plan">See the plan</a></p>
+
+    <h2>Is it for you today?</h2>
+    <div class="fit">
+      <div><strong>A good fit</strong>
+        <ul>
+          <li>You keep the same files on two or more servers, in one place or in several.</li>
+          <li>People mostly read them: media, archives, data sets, releases.</li>
+          <li>The connection of one server is your speed limit.</li>
+        </ul>
+      </div>
+      <div><strong>Not yet</strong>
+        <ul>
+          <li>Your programs need to change the files. Writing is planned.</li>
+          <li>You want it to keep the servers in step. Today the sync tool you already use does that, for example Syncthing or rsync.</li>
+          <li>You need something proven. SpliceFS is new and has not run in production.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Where it stands</h2>
+    <p>SpliceFS is at version 0.x. It reads and does not write yet, and it has not run in production. These pages say plainly what works today and what is only planned.</p>
+    <ul class="plainlinks">
+      <li><a href="/compare/">How it compares with NFS, CephFS, Syncthing and others today</a></li>
+      <li><a href="/changelog/">What each version changed</a></li>
+    </ul>
+
+    <h2 id="install">Install</h2>
     <ul class="pkgs">
       <li class="pkg"><svg class="pkg-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.88 12.685c-.4 0 .08.2.601.28.14-.1.27-.22.39-.33a3.001 3.001 0 01-.99.05m2.14-.53c.23-.33.4-.69.47-1.06-.06.27-.2.5-.33.73-.75.47-.07-.27 0-.56-.8 1.01-.11.6-.14.89m.781-2.05c.05-.721-.14-.501-.2-.221.07.04.13.5.2.22M12.38.31c.2.04.45.07.42.12.23-.05.28-.1-.43-.12m.43.12l-.15.03.14-.01V.43m6.633 9.944c.02.64-.2.95-.38 1.5l-.35.181c-.28.54.03.35-.17.78-.44.39-1.34 1.22-1.62 1.301-.201 0 .14-.25.19-.34-.591.4-.481.6-1.371.85l-.03-.06c-2.221 1.04-5.303-1.02-5.253-3.842-.03.17-.07.13-.12.2a3.551 3.552 0 012.001-3.501 3.361 3.362 0 013.732.48 3.341 3.342 0 00-2.721-1.3c-1.18.01-2.281.76-2.651 1.57-.6.38-.67 1.47-.93 1.661-.361 2.601.66 3.722 2.38 5.042.27.19.08.21.12.35a4.702 4.702 0 01-1.53-1.16c.23.33.47.66.8.91-.55-.18-1.27-1.3-1.48-1.35.93 1.66 3.78 2.921 5.261 2.3a6.203 6.203 0 01-2.33-.28c-.33-.16-.77-.51-.7-.57a5.802 5.803 0 005.902-.84c.44-.35.93-.94 1.07-.95-.2.32.04.16-.12.44.44-.72-.2-.3.46-1.24l.24.33c-.09-.6.74-1.321.66-2.262.19-.3.2.3 0 .97.29-.74.08-.85.15-1.46.08.2.18.42.23.63-.18-.7.2-1.2.28-1.6-.09-.05-.28.3-.32-.53 0-.37.1-.2.14-.28-.08-.05-.26-.32-.38-.861.08-.13.22.33.34.34-.08-.42-.2-.75-.2-1.08-.34-.68-.12.1-.4-.3-.34-1.091.3-.25.34-.74.54.77.84 1.96.981 2.46-.1-.6-.28-1.2-.49-1.76.16.07-.26-1.241.21-.37A7.823 7.824 0 0017.702 1.6c.18.17.42.39.33.42-.75-.45-.62-.48-.73-.67-.61-.25-.65.02-1.06 0C15.082.73 14.862.8 13.8.4l.05.23c-.77-.25-.9.1-1.73 0-.05-.04.27-.14.53-.18-.741.1-.701-.14-1.431.03.17-.13.36-.21.55-.32-.6.04-1.44.35-1.18.07C9.6.68 7.847 1.3 6.867 2.22L6.838 2c-.45.54-1.96 1.611-2.08 2.311l-.131.03c-.23.4-.38.85-.57 1.261-.3.52-.45.2-.4.28-.6 1.22-.9 2.251-1.16 3.102.18.27 0 1.65.07 2.76-.3 5.463 3.84 10.776 8.363 12.006.67.23 1.65.23 2.49.25-.99-.28-1.12-.15-2.08-.49-.7-.32-.85-.7-1.34-1.13l.2.35c-.971-.34-.57-.42-1.361-.67l.21-.27c-.31-.03-.83-.53-.97-.81l-.34.01c-.41-.501-.63-.871-.61-1.161l-.111.2c-.13-.21-1.52-1.901-.8-1.511-.13-.12-.31-.2-.5-.55l.14-.17c-.35-.44-.64-1.02-.62-1.2.2.24.32.3.45.33-.88-2.172-.93-.12-1.601-2.202l.15-.02c-.1-.16-.18-.34-.26-.51l.06-.6c-.63-.74-.18-3.102-.09-4.402.07-.54.53-1.1.88-1.981l-.21-.04c.4-.71 2.341-2.872 3.241-2.761.43-.55-.09 0-.18-.14.96-.991 1.26-.7 1.901-.88.7-.401-.6.16-.27-.151 1.2-.3.85-.7 2.421-.85.16.1-.39.14-.52.26 1-.49 3.151-.37 4.562.27 1.63.77 3.461 3.011 3.531 5.132l.08.02c-.04.85.13 1.821-.17 2.711l.2-.42M9.54 13.236l-.05.28c.26.35.47.73.8 1.01-.24-.47-.42-.66-.75-1.3m.62-.02c-.14-.15-.22-.34-.31-.52.08.32.26.6.43.88l-.12-.36m10.945-2.382l-.07.15c-.1.76-.34 1.511-.69 2.212.4-.73.65-1.541.75-2.362M12.45.12c.27-.1.66-.05.95-.12-.37.03-.74.05-1.1.1l.15.02M3.006 5.142c.07.57-.43.8.11.42.3-.66-.11-.18-.1-.42m-.64 2.661c.12-.39.15-.62.2-.84-.35.44-.17.53-.2.83"/></svg><div class="pkg-text"><strong>Debian</strong><span>12, 13</span><span>deb, apt repository</span></div></li>
       <li class="pkg"><svg class="pkg-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.61.455a3.41 3.41 0 0 0-3.41 3.41 3.41 3.41 0 0 0 3.41 3.41 3.41 3.41 0 0 0 3.41-3.41 3.41 3.41 0 0 0-3.41-3.41zM12.92.8C8.923.777 5.137 2.941 3.148 6.451a4.5 4.5 0 0 1 .26-.007 4.92 4.92 0 0 1 2.585.737A8.316 8.316 0 0 1 12.688 3.6 4.944 4.944 0 0 1 13.723.834 11.008 11.008 0 0 0 12.92.8zm9.226 4.994a4.915 4.915 0 0 1-1.918 2.246 8.36 8.36 0 0 1-.273 8.303 4.89 4.89 0 0 1 1.632 2.54 11.156 11.156 0 0 0 .559-13.089zM3.41 7.932A3.41 3.41 0 0 0 0 11.342a3.41 3.41 0 0 0 3.41 3.409 3.41 3.41 0 0 0 3.41-3.41 3.41 3.41 0 0 0-3.41-3.41zm2.027 7.866a4.908 4.908 0 0 1-2.915.358 11.1 11.1 0 0 0 7.991 6.698 11.234 11.234 0 0 0 2.422.249 4.879 4.879 0 0 1-.999-2.85 8.484 8.484 0 0 1-.836-.136 8.304 8.304 0 0 1-5.663-4.32zm11.405.928a3.41 3.41 0 0 0-3.41 3.41 3.41 3.41 0 0 0 3.41 3.41 3.41 3.41 0 0 0 3.41-3.41 3.41 3.41 0 0 0-3.41-3.41z"/></svg><div class="pkg-text"><strong>Ubuntu</strong><span>22.04, 24.04, 26.04</span><span>deb, apt repository</span></div></li>
@@ -116,24 +174,16 @@ footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 
       <li class="pkg"><svg class="pkg-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.682 2.406c-.001-.149-.097-.187-.24-.189h-.25v.659h.108v-.282h.102l.17.282h.122l-.184-.29c.102-.012.175-.065.172-.18zm-.382.096v-.193h.13c.06-.002.145.011.143.089.005.09-.08.107-.153.103h-.12zM21.851 1.49c1.172 1.171-2.077 6.319-2.626 6.869-.549.548-1.944.044-3.115-1.128-1.172-1.171-1.676-2.566-1.127-3.115.549-.55 5.697-3.798 6.868-2.626zM1.652 6.61C.626 4.818-.544 2.215.276 1.395c.81-.81 3.355.319 5.144 1.334A11.003 11.003 0 0 0 1.652 6.61zm18.95.418a10.584 10.584 0 0 1 1.368 5.218c0 5.874-4.762 10.636-10.637 10.636C5.459 22.882.697 18.12.697 12.246.697 6.371 5.459 1.61 11.333 1.61c1.771 0 3.441.433 4.909 1.199-.361.201-.69.398-.969.574-.428-.077-.778-.017-.998.202-.402.402-.269 1.245.263 2.2.273.539.701 1.124 1.25 1.674.103.104.208.202.315.297 1.519 1.446 3.205 2.111 3.829 1.486.267-.267.297-.728.132-1.287.167-.27.35-.584.538-.927zm2.814-5.088c-.322 0-.584.266-.584.595s.261.595.584.595c.323 0 .584-.266.584-.595s-.261-.595-.584-.595zm0 1.087c-.252 0-.457-.22-.457-.492s.204-.492.457-.492c.252 0 .457.22.457.492s-.204.492-.457.492z"/></svg><div class="pkg-text"><strong>FreeBSD</strong><span>14, 15</span><span>pkg repository, server and client</span></div></li>
       <li class="pkg"><svg class="pkg-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.938 0a.214.214 0 0 0-.206.156c-.316 1.104.179 2.15.838 2.935.153.181.313.347.476.501a2.039 2.039 0 0 0-.665.02c-1.184.233-2.193.985-2.74 2.532a3.893 3.893 0 0 0-.2 1.466 1.565 1.565 0 0 0-1.156 1.504 1.59 1.59 0 0 0 1.227 1.541l.026 12.046c0 .195.1.377.264.482a.214.214 0 0 0 .008.005c.537.31 2.047.812 5.21.812 3.238 0 4.7-.678 5.181-1.04a.214.214 0 0 0 .008-.007.571.571 0 0 0 .206-.439c.002-.344.002-1.136.002-1.604a.143.143 0 0 1 .147-.144c.397.006.869.006 1.318.005a1.826 1.826 0 0 0 1.832-1.825v-5.804a1.826 1.826 0 0 0-1.825-1.826H16.56a.14.14 0 0 1-.143-.144V10.6h.007v-.001a1.573 1.573 0 0 0 1.356-1.556c0-.816-.627-1.489-1.424-1.563-.025-1.438-.437-2.126-.736-2.58a.214.214 0 0 0-.005-.007c-.364-.51-1.193-1.282-2.275-1.316-.503-.016-.842.124-1.125.254-.217.1-.42.177-.67.22.002-1.286.945-1.981.945-1.981a.214.214 0 0 0 .05-.298s-.087-.122-.21-.26c-.121-.136-.269-.294-.47-.378a.214.214 0 0 0-.079-.017.214.214 0 0 0-.145.055 4.308 4.308 0 0 0-.875 1.101 3.42 3.42 0 0 0-.133.273 3.497 3.497 0 0 0-.381-.846C9.794.978 9.063.436 8.017.016A.214.214 0 0 0 7.939 0zm.156.524c.85.378 1.43.83 1.79 1.403.274.438.426.962.484 1.584a3.07 3.07 0 0 0-.012.462 6.897 6.897 0 0 1-.168-.052 5.487 5.487 0 0 1-1.29-1.106c-.551-.657-.935-1.46-.804-2.291zM11.8 1.618c.07.054.141.101.212.18.034.039.032.04.058.073-.332.308-1.07 1.144-.952 2.453a.214.214 0 0 0 .222.195c.469-.017.782-.172 1.056-.299.273-.126.508-.228.931-.214.875.027 1.639.715 1.939 1.134.295.449.65 1 .663 2.36a1.66 1.66 0 0 0-.41.142 1.938 1.938 0 0 0-1.77-1.16 1.94 1.94 0 0 0-1.87 1.448 1.783 1.783 0 0 0-1.356-.64c-.484 0-.91.205-1.233.517a1.873 1.873 0 0 0-1.85-1.625c-.649 0-1.218.335-1.552.84a3.1 3.1 0 0 1 .157-.735c.51-1.437 1.355-2.045 2.42-2.254.367-.073.664-.011.99.095.325.106.671.262 1.094.342a.214.214 0 0 0 .252-.245c-.112-.67.073-1.266.336-1.744a3.71 3.71 0 0 1 .663-.863zM7.44 6.611a1.442 1.442 0 0 1 1.363 1.925.214.214 0 0 0 .168.283h.005a.214.214 0 0 0 .238-.146 1.373 1.373 0 0 1 2.613-.01.214.214 0 0 0 .417-.09 1.509 1.509 0 0 1 1.504-1.664c.678 0 1.249.445 1.442 1.056a.214.214 0 0 0 .259.143l.15-.04a.214.214 0 0 0 .051-.02 1.139 1.139 0 0 1 1.702.995 1.14 1.14 0 0 1-.985 1.131.214.214 0 0 0-.001 0 2.215 2.215 0 0 0-.485.126 10.65 10.65 0 0 1-1.176.365.214.214 0 0 0-.162.186 1.276 1.276 0 0 1-.146.478 2.07 2.07 0 0 0-.239 1.111l.001.151a.438.438 0 0 1-.16.36.665.665 0 0 1-.43.14.586.586 0 0 1-.588-.59.803.803 0 0 0-.38-.681.214.214 0 0 0-.002-.002c-.24-.145-.43-.37-.532-.636a.214.214 0 0 0-.207-.138 19.469 19.469 0 0 1-5.37-.6l-.003-.002a9.007 9.007 0 0 0-.838-.194h.003a1.16 1.16 0 0 1-.937-1.134c0-.619.488-1.118 1.101-1.14a.214.214 0 0 0 .204-.176 1.443 1.443 0 0 1 1.42-1.187zm8.549 4.106v.455c0 .314.259.573.572.573h1.329a1.397 1.397 0 0 1 1.397 1.397v5.804a1.396 1.396 0 0 1-1.402 1.396.214.214 0 0 0-.002 0c-.448.002-.918 0-1.31-.005a.573.573 0 0 0-.584.573c0 .468 0 1.262-.002 1.603a.214.214 0 0 0 0 .001c0 .042-.019.08-.05.107-.346.26-1.75.95-4.915.95-3.107 0-4.587-.52-4.99-.752a.143.143 0 0 1-.065-.118l-.025-11.955c.145.033.288.07.431.11a.214.214 0 0 0 .003 0c.115.031.246.064.383.097v10.37c0 .129.069.247.18.31.453.217 1.767.732 4.071.732 2.32 0 3.595-.626 4.022-.884a.357.357 0 0 0 .164-.3l.001-10.21c.267-.075.531-.158.792-.254zm-7.99.894a.493.493 0 0 1 .494.493v8.578a.493.493 0 0 1-.493.493.493.493 0 0 1-.494-.493v-8.578A.493.493 0 0 1 8 11.611zm8.652 1.14a.663.663 0 0 0-.662.662v5.208a.663.663 0 0 0 .662.662h1.14a.663.663 0 0 0 .662-.662v-5.209a.663.663 0 0 0-.662-.662zm0 .428h1.14a.233.233 0 0 1 .233.233v5.21a.233.233 0 0 1-.233.232h-1.14a.233.233 0 0 1-.233-.233v-5.209a.233.233 0 0 1 .233-.233z"/></svg><div class="pkg-text"><strong>macOS (Apple silicon)</strong><span>Homebrew tap</span><span>Today the formulas build from source.</span></div></li>
     </ul>
-    <p class="small pkg-note">Linux packages are built for x86-64 and arm64, signed, install-tested on every version listed, and published.</p>
-    <p><a href="https://packages.splicefs.org/">How to install</a></p>
+    <p class="small pkg-note">Packages for x86-64 and arm64. They are signed and come through the package manager of your system, so updates arrive the usual way.</p>
+    <p><a href="https://packages.splicefs.org/">Install instructions</a></p>
     <ul class="links">
-      <li><a class="card" href="/compare/"><strong>Compare</strong><span>An honest look next to NFS, SMB, CephFS, GlusterFS, BitTorrent, Resilio Sync, Syncthing and Rclone, and where it is headed</span></a></li>
-      <li><a class="card" href="/how-it-works/"><strong>How it works</strong><span>How the client, the servers and the blocks of a file fit together, with diagrams</span></a></li>
-      <li><a class="card" href="https://packages.splicefs.org/"><strong>Install</strong><span>Packages for Debian, Ubuntu, RHEL, Rocky Linux, AlmaLinux and Alpine</span></a></li>
+      <li><a class="card" href="/how-it-works/"><strong>How it works</strong><span>One file, three servers: what happens when you open it, in pictures</span></a></li>
+      <li><a class="card" href="/compare/"><strong>Compare</strong><span>An honest look next to NFS, SMB, CephFS, GlusterFS, BitTorrent, Resilio Sync, Syncthing and Rclone</span></a></li>
+      <li><a class="card" href="/changelog/"><strong>Change log</strong><span>What went out with each version of the server, the client and the packages</span></a></li>
+      <li><a class="card" href="https://packages.splicefs.org/"><strong>Install</strong><span>The commands for your system, one line to copy</span></a></li>
       <li><a class="card" href="https://github.com/SpliceFS/server"><strong>Server</strong><span>splicefsd, source and documentation</span></a></li>
       <li><a class="card" href="https://github.com/SpliceFS/client"><strong>Client</strong><span>splicefs, source and documentation</span></a></li>
     </ul>
-    <h2>Project status</h2>
-    <p class="small">Live results of the builds, tests and security scans of every repository. Each badge links to its report.</p>
-    <div class="status">
-      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/server">server</a><span>splicefsd, the server</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/server/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/server/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/server/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/server/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://codecov.io/gh/SpliceFS/server"><img src="https://codecov.io/gh/SpliceFS/server/graph/badge.svg" alt="Test coverage" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_server"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_server&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/server"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/server/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16604"><img src="https://www.bestpractices.dev/projects/16604/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
-      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/client">client</a><span>splicefs, the client</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/client/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/client/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/client/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/client/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://codecov.io/gh/SpliceFS/client"><img src="https://codecov.io/gh/SpliceFS/client/graph/badge.svg" alt="Test coverage" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_client"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_client&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/client"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/client/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16606"><img src="https://www.bestpractices.dev/projects/16606/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
-      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/common">common</a><span>shared Go packages</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/common/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/common/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/common/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/common/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://codecov.io/gh/SpliceFS/common"><img src="https://codecov.io/gh/SpliceFS/common/graph/badge.svg" alt="Test coverage" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_common"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_common&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/common"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/common/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16607"><img src="https://www.bestpractices.dev/projects/16607/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
-      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/packages">packages</a><span>install script and package site</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/packages/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/packages/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/packages/actions/workflows/install-tests.yml"><img src="https://github.com/SpliceFS/packages/actions/workflows/install-tests.yml/badge.svg" alt="Install tests" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/packages/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/packages/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_packages"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_packages&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/packages"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/packages/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16609"><img src="https://www.bestpractices.dev/projects/16609/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
-      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/homebrew-tap">homebrew-tap</a><span>Homebrew formulas for macOS</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/homebrew-tap/actions/workflows/tests.yml"><img src="https://github.com/SpliceFS/homebrew-tap/actions/workflows/tests.yml/badge.svg" alt="Formula tests" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/homebrew-tap/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/homebrew-tap/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/homebrew-tap"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/homebrew-tap/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a></div></div>
-    </div>
   </div>
 </main>
 <footer>

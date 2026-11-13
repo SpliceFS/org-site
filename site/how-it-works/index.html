@@ -36,9 +36,12 @@ a { color: var(--accent); }
 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
 header.top { border-bottom: 1px solid var(--border); }
-header.top .wrap { display: flex; align-items: baseline; justify-content: space-between; padding-top: 16px; padding-bottom: 16px; }
-.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
-header.top a { font-size: 14px; }
+header.top .wrap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; padding-top: 16px; padding-bottom: 16px; }
+.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; color: inherit; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.nav a { font-size: 14px; text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
 main { padding: 48px 0 24px; }
 h1 { font-size: 32px; line-height: 1.2; margin: 0 0 16px; letter-spacing: -0.02em; }
 p { margin: 0 0 16px; }
@@ -62,6 +65,27 @@ figure.diagram { margin: 16px 0 16px; padding: 12px; border: 1px solid var(--bor
 figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted); }
 .limits { margin: 0 0 16px; padding-left: 20px; }
 .limits li { margin: 0 0 6px; }
+.step { display: flex; align-items: center; gap: 12px; margin: 56px 0 8px; }
+.step h3 { margin: 0; }
+.step-n { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.notes { margin: 0 0 16px; padding: 10px 16px 10px 34px; border-left: 3px solid var(--border); font-size: 15px; color: var(--muted); }
+.notes li { margin: 0 0 6px; }
+.notes li:last-child { margin-bottom: 0; }
+.notes strong { color: var(--fg); font-weight: 600; }
+.pill { display: inline-block; margin-left: 8px; padding: 1px 9px; border: 1px dashed var(--muted); border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--muted); vertical-align: 2px; }
+.two { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0; }
+.two div { padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.two ul { margin: 8px 0 0; padding-left: 20px; font-size: 15px; }
+.two li { margin: 0 0 8px; }
+.links { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 32px 0 0; padding: 0; list-style: none; }
+.card { display: block; height: 100%; padding: 16px; text-decoration: none; color: var(--fg); border: 1px solid var(--border); border-radius: 8px; }
+.card:hover { border-color: var(--accent); background: var(--hover-bg); }
+.card strong { display: block; font-weight: 600; }
+.card span { display: block; font-size: 14px; color: var(--muted); }
+@media (min-width: 641px) {
+  .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .links { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 /* diagrams: every color comes from the tokens above, so they follow light and dark */
 .d { display: block; width: 100%; max-width: 760px; height: auto; margin: 0 auto; font: 14px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
 .d text { fill: var(--fg); }
@@ -99,25 +123,33 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="mark" href="/" style="font-size:20px;text-decoration:none;color:inherit">SpliceFS</a>
-    <a href="https://github.com/SpliceFS">GitHub</a>
+    <a class="mark" href="/">SpliceFS</a>
+    <nav class="nav" aria-label="Site">
+      <a href="/how-it-works/" aria-current="page">How it works</a>
+      <a href="/compare/">Compare</a>
+      <a href="/changelog/">Change log</a>
+      <a href="https://packages.splicefs.org/">Install</a>
+      <a href="https://github.com/SpliceFS">GitHub</a>
+    </nav>
   </div>
 </header>
 <main>
   <div class="wrap">
     <h1>How SpliceFS works</h1>
-    <p class="lede">SpliceFS mounts the files of a cluster of servers as one read-only folder. It reads each file from several servers at once.</p>
-    <p class="statusline"><strong>Status: alpha, step one.</strong> Read-only. The first 0.x versions are published as packages. It has not run in production.</p>
+    <p class="lede">Picture the same folder of files on three servers. SpliceFS lets a computer open that folder as if it were on its own disk, and it pulls every file from all three servers at once.</p>
+    <p>This page follows one file from the servers to the program that reads it, in four steps. Then it lists what SpliceFS cannot do yet, and where it is going.</p>
     <ul class="toc" aria-label="On this page">
-      <li><a href="#today">Today</a></li>
-      <li><a href="#plan">The plan</a></li>
+      <li><a href="#servers">1. The servers</a></li>
+      <li><a href="#connect">2. Finding them</a></li>
+      <li><a href="#read">3. Reading a file</a></li>
+      <li><a href="#failure">4. A server fails</a></li>
+      <li><a href="#limits">What it cannot do yet</a></li>
+      <li><a href="#plan">Where it is going</a></li>
     </ul>
 
     <section id="today">
-      <h2>Today</h2>
-      <p>This section describes what the code does now, as written in the design documents of the server and the client.</p>
-
-      <h3>The pieces</h3>
+      <div class="step" id="servers"><span class="step-n" aria-hidden="true">1</span><h3>You have the same files on a few servers</h3></div>
+      <p>Each server keeps the files as ordinary files in an ordinary folder. A small program, <code>splicefsd</code>, serves them. You keep the folders the same with the sync tool you already use, for example Syncthing or rsync.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 304" role="img" aria-labelledby="a-title">
           <title id="a-title">A client looks up the cluster host name, which points at three servers. Each server holds plain files, and your own sync tool keeps them equal.</title>
@@ -154,9 +186,14 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>One name leads to the servers. The sync tool is yours; SpliceFS does not copy data between servers.</figcaption>
       </figure>
-      <p>The servers are called nodes. Each one runs the server program <code>splicefsd</code> and holds the files as plain files in a folder. You keep those folders equal with any sync tool you like, because SpliceFS does not copy data between servers today. One host name, the cluster host, points at one, several or all of the servers. The client program <code>splicefs</code> is told only that name.</p>
+      <p>Then you pick one host name for the whole group, for example <code>files.example.com</code>, and point it at one or more of the servers. That name is all a reader ever has to know.</p>
+      <ul class="notes">
+        <li><strong>SpliceFS does not copy files between servers today.</strong> Your sync tool does. That is the dashed line in the picture.</li>
+        <li>The pictures call the servers node-1, node-2 and node-3.</li>
+      </ul>
 
-      <h3>Connecting</h3>
+      <div class="step" id="connect"><span class="step-n" aria-hidden="true">2</span><h3>The reading computer finds the servers</h3></div>
+      <p>On the computer that reads, the client program <code>splicefs</code> logs in at that one name, over HTTPS, with a user name and a password. The server that answers hands back the address of every server in the group. From then on the client talks to each server directly.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 284" role="img" aria-labelledby="b-title">
           <title id="b-title">Three steps. One: the client logs in at the cluster host. Two: the cluster host sends back the list of servers. Three: the client talks to each server directly.</title>
@@ -193,9 +230,13 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Only the cluster host is asked for the list. After that the client uses each server's own address.</figcaption>
       </figure>
-      <p>The client logs in at the cluster host over HTTPS and asks it for the list of servers. Every server publishes its own direct address, and any server can answer with the whole list. The small files that hold users and server addresses travel between servers with the same sync tool. After that the client talks to each server directly. It asks the cluster host for the list again every minute, so servers can join and leave.</p>
+      <ul class="notes">
+        <li><strong>Servers can come and go.</strong> The client asks for the list again every minute, so you add or remove a server without touching any reader.</li>
+        <li>The users and the server addresses are kept in small files that your sync tool carries along with everything else.</li>
+      </ul>
 
-      <h3>Reading a file</h3>
+      <div class="step" id="read"><span class="step-n" aria-hidden="true">3</span><h3>Opening a file pulls it from every server at once</h3></div>
+      <p>When you open a folder, the client asks every server what is in it and shows you one combined list. When you open a file, the client cuts it into blocks of 5 MiB and asks a different server for each block, all at the same time. As the blocks arrive it puts them in order and hands them to the program that is reading.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 296" role="img" aria-labelledby="c-title">
           <title id="c-title">One file shown as nine numbered blocks. Each block is colored by the server that sent it, node-1, node-2 or node-3. All blocks are kept in the local cache on disk.</title>
@@ -253,9 +294,15 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Three servers send different blocks at the same time. The client puts them in order and keeps them in its cache.</figcaption>
       </figure>
-      <p>The client reads a file in blocks, 5 MiB each by default. It asks several servers for different blocks at the same time and puts them together in order, so the speeds add up. Blocks that were read are kept in a cache on local disk, and a second read comes from the cache. Small files and small isolated reads are read straight from the servers and are not cached.</p>
+      <p>That is where the speed comes from: three servers together deliver about three times what one could, as long as the line of the reading computer keeps up.</p>
+      <ul class="notes">
+        <li><strong>A second read is local.</strong> Blocks are kept in a cache on the local disk, so reading the same part again does not touch the network.</li>
+        <li>A file is only asked from the servers that have it.</li>
+        <li>Small files, and small reads in the middle of a file, are fetched directly and are not cached.</li>
+      </ul>
 
-      <h3>When a server fails</h3>
+      <div class="step" id="failure"><span class="step-n" aria-hidden="true">4</span><h3>A server drops out and the read keeps going</h3></div>
+      <p>When a server is slow or stops answering, the client asks another server for the same block and takes whichever complete answer comes first. The program that is reading sees nothing, and the folder stays mounted.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 296" role="img" aria-labelledby="d-title">
           <title id="d-title">The same file as before, but node-2 is down and crossed out. Blocks 2, 5 and 7 now come from node-1 and node-3, and the read continues.</title>
@@ -313,28 +360,41 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>A block that node-2 did not deliver is asked from another server. The reader does not notice.</figcaption>
       </figure>
-      <p>If a server is slow or does not answer, the client asks another server for that block and uses the first complete answer. The read goes on and the mount stays up. A server whose copy of a file has changed is dropped for that file. If no server can deliver a block within a time limit, the read fails with an I/O error and does not hang.</p>
-
-      <h3>What it does not do today</h3>
-      <p>Linux and FreeBSD mount with FUSE. macOS mounts through a small local NFS server that is part of the client.</p>
-      <ul class="limits">
-        <li>It is read-only. Nothing can be written through the mount.</li>
-        <li>It does not copy data between servers. Your sync tool does that.</li>
-        <li>A removed or disabled user keeps access until the token expires, 30 minutes by default.</li>
-        <li>A token from one server is rejected by another until the sync tool has delivered the first server's key file.</li>
-        <li>A client that is restarted while no server can be reached cannot list folders, although cached file contents are still on its disk.</li>
-        <li>macOS limits: a read that waits longer than about 9 seconds fails, requests are served one at a time per connection so speed stays below Linux, and an outage can make a new name look missing for up to 30 seconds.</li>
+      <ul class="notes">
+        <li><strong>The server gets its work back.</strong> A slow server is given less to do. A failed one is rested, one second at first and thirty at most, then tried again, so it carries its share as soon as it recovers.</li>
+        <li>A server whose copy of a file has changed is left out for that file.</li>
+        <li>If no server at all can deliver a block within the time limit, the read fails with an error. It does not hang.</li>
       </ul>
-      <p>For the full comparison with other systems, see <a href="/compare/">How SpliceFS compares</a>.</p>
+
+      <h2 id="limits">What it cannot do yet</h2>
+      <p>SpliceFS is new, and it is better to know the limits before you try it.</p>
+      <div class="two">
+        <div><strong>By design, for now</strong>
+          <ul>
+            <li><strong>You cannot write.</strong> The folder is read-only.</li>
+            <li><strong>It does not copy files between servers.</strong> Your sync tool does that.</li>
+          </ul>
+        </div>
+        <div><strong>Rough edges</strong>
+          <ul>
+            <li><strong>Removing a user takes time to bite.</strong> A user who is logged in keeps access until the login expires, 30 minutes by default.</li>
+            <li><strong>A new login needs a moment.</strong> A login made at one server is refused by the others until your sync tool has delivered that server's key file to them.</li>
+            <li><strong>Starting with every server down.</strong> A client that starts while no server can be reached cannot list folders, although the file contents it read before are still in its cache.</li>
+          </ul>
+        </div>
+      </div>
+      <p><strong>On a Mac</strong> the folder is mounted through a small NFS server that is part of the client; Linux and FreeBSD use FUSE. The Mac way has limits of its own: a read that has to wait longer than about 9 seconds fails, speed stays below Linux because requests are handled one at a time per connection, and after an outage a new file name can look missing for up to 30 seconds.</p>
+      <p>For how this stands next to other systems, see <a href="/compare/">How SpliceFS compares</a>.</p>
     </section>
 
 <!-- PLAN-SECTIONS-START -->
     <section id="plan">
-      <h2>The plan</h2>
-      <p class="statusline planned"><strong>Plan, not built.</strong> Read-only is step one. Everything below is the direction the project is headed. None of it exists yet, and details will change.</p>
+      <h2>Where it is going</h2>
+      <p class="statusline planned"><strong>Plan, not built.</strong> Reading is step one. Everything below is where the project is headed. None of it exists yet, and details will change.</p>
       <p class="small legend"><span class="sw" aria-hidden="true"></span>Solid outline = exists today. <span class="sw dash" aria-hidden="true"></span>Dashed outline = planned.</p>
 
-      <h3>Writing, with transactions</h3>
+      <h3>Writing that happens everywhere, or not at all <span class="pill">Planned</span></h3>
+      <p>You will be able to write through the folder. A change to a file is a transaction: every server that holds the file takes it, or none does. You never end up with half a change.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 276" role="img" aria-labelledby="e-title">
           <title id="e-title">A client sends a change to a file. On the left, one outcome: every server that holds the file commits the change. On the right, the other outcome: no server commits it.</title>
@@ -374,9 +434,9 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Plan, not built. One change has one outcome: every server that holds the file commits it, or none does.</figcaption>
       </figure>
-      <p>Clients will write through the mount. A change to a file is a transaction: it happens completely or not at all, on every server that holds the file.</p>
 
-      <h3>Cohorts</h3>
+      <h3>Servers that cover for each other <span class="pill">Planned</span></h3>
+      <p>A cohort is a group of servers that hold data together, the way the disks of a RAID set do. Lose one member and the data is still complete. Reads are spread over the members.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 248" role="img" aria-labelledby="f-title">
           <title id="f-title">Six servers grouped into two cohorts of three. In cohort 1 the blocks of one file are spread over the members. One member, node-2, is lost and crossed out, and the file is still complete.</title>
@@ -420,9 +480,9 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Plan, not built. Six servers in two cohorts of three. In cohort 1 one member is lost and the file is still complete; blocks 2 and 5 (thick outline) come from the other members.</figcaption>
       </figure>
-      <p>A cohort is a group of servers that hold data together, the way the disks of a RAID set do. The data survives the loss of a member. Reads are spread over the members.</p>
 
-      <h3>Locks and full POSIX behavior</h3>
+      <h3>Locks that every reader respects <span class="pill">Planned</span></h3>
+      <p>When a program locks a file through one client, every other client honors that lock, wherever it is. The goal is full POSIX behavior, so ordinary programs work on a SpliceFS folder without changes.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 216" role="img" aria-labelledby="g-title">
           <title id="g-title">Two clients at different places and one file. Client 1 holds the lock on the file. Client 2 waits for it.</title>
@@ -451,9 +511,9 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Plan, not built. Client 1 holds the lock on a file. Client 2, at another place, waits.</figcaption>
       </figure>
-      <p>A lock that a program takes on a file through one client is honored by every other client, wherever it is. The goal is full POSIX behavior, so ordinary programs work on a SpliceFS mount without changes.</p>
 
-      <h3>Near and far, and where data lives</h3>
+      <h3>The same from anywhere, and a say in where data lives <span class="pill">Planned</span></h3>
+      <p>A client on the local network, one over a VPN and one over the public internet should all be treated the same way. And a rule on one file, one folder or a whole cluster will say at which locations that data is held.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 346" role="img" aria-labelledby="h-title">
           <title id="h-title">Three clients, on the local network, over a VPN and over the public internet, all drawn the same and all reaching one cluster. The cluster has three locations, A, B and C, each with two servers. The folder reports is held at A and B only. The folder tools is held everywhere.</title>
@@ -510,9 +570,9 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Plan, not built. All three clients are treated the same way. One folder is held at locations A and B only, another is held everywhere.</figcaption>
       </figure>
-      <p>SpliceFS aims to treat a client on the local network, a client over a VPN and a client over the public internet the same way. Geographic tenancy lets a rule on one file, one directory or a whole cluster say at which locations that data is held.</p>
 
-      <h3>The plan by version</h3>
+      <h3>The road by version <span class="pill">Planned</span></h3>
+      <p>0.x is the core of the SpliceFS protocol, and access controls. 1.x is enterprise tooling and visibility. 2.x: only time will tell.</p>
       <figure class="diagram">
         <svg class="d" viewBox="0 0 720 152" role="img" aria-labelledby="i-title">
           <title id="i-title">A line with three stops. 0.x is marked now: the core of the SpliceFS protocol and access controls. 1.x is planned: enterprise tooling and visibility. 2.x is planned: only time will tell.</title>
@@ -537,11 +597,14 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Plan, not built. The project is in 0.x now. 1.x and 2.x come later.</figcaption>
       </figure>
-      <p>0.x is the core of the SpliceFS protocol, and access controls. 1.x is enterprise tooling and visibility. 2.x: only time will tell.</p>
-
-      <p>For where SpliceFS stands today next to mature systems, see <a href="/compare/">How SpliceFS compares</a>.</p>
     </section>
 <!-- PLAN-SECTIONS-END -->
+
+    <ul class="links">
+      <li><a class="card" href="https://packages.splicefs.org/"><strong>Install</strong><span>The commands for your system</span></a></li>
+      <li><a class="card" href="/compare/"><strong>Compare</strong><span>Next to NFS, CephFS, Syncthing and others</span></a></li>
+      <li><a class="card" href="/changelog/"><strong>Change log</strong><span>What each version changed</span></a></li>
+    </ul>
   </div>
 </main>
 <footer>
