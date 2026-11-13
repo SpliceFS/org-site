@@ -316,7 +316,7 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
       <p>If a server is slow or does not answer, the client asks another server for that block and uses the first complete answer. The read goes on and the mount stays up. A server whose copy of a file has changed is dropped for that file. If no server can deliver a block within a time limit, the read fails with an I/O error and does not hang.</p>
 
       <h3>What it does not do today</h3>
-      <p>Linux mounts with FUSE. macOS mounts through a small local NFS server that is part of the client.</p>
+      <p>Linux and FreeBSD mount with FUSE. macOS mounts through a small local NFS server that is part of the client.</p>
       <ul class="limits">
         <li>It is read-only. Nothing can be written through the mount.</li>
         <li>It does not copy data between servers. Your sync tool does that.</li>
