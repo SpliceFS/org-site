@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Sent by the release of the server, the client and the packages: the change log page
+  # is built from their change log files, so it is published again after each release.
+  repository_dispatch:
+    types: [release-published]
 
 permissions:
   contents: read

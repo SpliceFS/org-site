@@ -5,7 +5,14 @@
 tracked-files:
 	scripts/tracked-files.sh
 
-check: tracked-files
+# The change log page is not kept in this repository. It is built from the change log
+# files of the server, the client and the packages, and the pages are checked with it in
+# place, because the other pages link to it.
+.PHONY: changelog
+changelog:
+	scripts/build-changelog.sh
+
+check: tracked-files changelog
 	python3 scripts/check.py
 
 lint:

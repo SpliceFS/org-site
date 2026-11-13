@@ -1,14 +1,25 @@
 # splicefs.org
 
-The website of the SpliceFS project, https://splicefs.org: the home page and the
-[comparison](https://splicefs.org/compare/) with other file systems.
+The website of the SpliceFS project, https://splicefs.org: the home page, how it works, the
+[comparison](https://splicefs.org/compare/) with other file systems, and the change log.
 
-The pages are plain HTML files in `site/`. There is no build step and no framework.
+The pages are plain HTML files in `site/`. There is no framework, and one page is built:
 
 ```
-site/index.html            the home page
-site/compare/index.html    how SpliceFS compares, and where it is headed
+site/index.html                 the home page: what SpliceFS is and who it is for
+site/how-it-works/index.html    one file from the servers to the reader, in pictures
+site/compare/index.html         how SpliceFS compares, and where it is headed
+site/changelog/index.html       built, not kept here: what each version changed
 ```
+
+## The change log page
+
+`make changelog` builds it from the `CHANGELOG.md` of the server, the client and the packages
+repository (`scripts/changelog.py` with the page in `scripts/changelog-page.html`). One row per
+version, one column per part. `make check` builds it first, because the other pages link to it.
+Each release of those three repositories asks this repository to publish again, so the page
+follows them. To build it from local files: `CHANGELOG_DIR=folder make changelog`, with
+`server.md`, `client.md` and `packages.md` in that folder.
 
 ## Changing a page
 
@@ -16,7 +27,7 @@ Edit the file, look at it, and open a pull request:
 
 ```
 python3 -m http.server --directory site 8000    # then open http://localhost:8000
-make check                                       # the pages are well formed and their links lead somewhere
+make check                                       # builds the change log page; the pages are well formed and their links lead somewhere
 ```
 
 When the change reaches `main`, the `Publish` workflow checks the pages, copies `site/` to the
