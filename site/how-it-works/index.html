@@ -193,7 +193,7 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </svg>
         <figcaption>Only the cluster host is asked for the list. After that the client uses each server's own address.</figcaption>
       </figure>
-      <p>The client logs in at the cluster host over HTTPS and asks it for the list of servers. Every server publishes its own direct address, and any server can answer with the whole list. The small files that hold users and server addresses travel between servers with the same sync tool. After that the client talks to each server directly.</p>
+      <p>The client logs in at the cluster host over HTTPS and asks it for the list of servers. Every server publishes its own direct address, and any server can answer with the whole list. The small files that hold users and server addresses travel between servers with the same sync tool. After that the client talks to each server directly. It asks the cluster host for the list again every minute, so servers can join and leave.</p>
 
       <h3>Reading a file</h3>
       <figure class="diagram">
