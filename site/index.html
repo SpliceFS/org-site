@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SpliceFS</title>
-<meta name="description" content="SpliceFS mounts a read-only folder whose files are streamed from several servers at once.">
+<meta name="description" content="SpliceFS mounts the files of a cluster of servers as one read-only folder and reads each file from every server that has it, at the same time.">
 <style>
 :root {
   --bg: #ffffff;
@@ -53,6 +53,8 @@ p { margin: 0 0 16px; }
 .card span { display: block; font-size: 14px; color: var(--muted); }
 h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 8px; }
 .small { font-size: 14px; color: var(--muted); }
+.how { padding-left: 20px; }
+.how li { margin: 0 0 10px; }
 .pkgs { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
 .pkg { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
 .pkg-logo { flex: 0 0 32px; width: 32px; height: 32px; }
@@ -95,8 +97,13 @@ footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 
 <main>
   <div class="wrap">
     <h1>One folder, streamed from several servers at once</h1>
-    <p>SpliceFS mounts a read-only folder whose files are streamed from several servers at once. Every server that holds a copy of a file serves blocks of it, and the client splices the blocks back together in order, caching them on local disk.</p>
-    <p>It is built for throughput: a reader far away from every server gets the combined upload speed of all of them, and a slow or failing server is routed around while a file is being read.</p>
+    <p>You give the SpliceFS client one host name. It logs in, gets the list of every server behind that name, and from then on asks all of them.</p>
+    <ul class="how">
+      <li><strong>Finding files.</strong> When you open a folder, the client asks every server what it has there and shows you the combined answer. A server that does not have the folder says so, which costs almost nothing. The client asks it again the next time, because the folder may turn up there later.</li>
+      <li><strong>Reading files.</strong> A file is read only from the servers that said they have it. Each of them sends different blocks at the same time, so their speeds add up. The client puts the blocks in order and keeps them in a cache on local disk.</li>
+      <li><strong>Slow and failing servers.</strong> The client measures every server as it reads. A slow server gets less work, and only blocks that are not needed yet. A server that fails is rested, for one second at first and for at most thirty, and then tried again, so it carries its share again as soon as it recovers.</li>
+    </ul>
+    <p><a href="/how-it-works/">See it in pictures.</a></p>
     <p class="small"><strong>Status: alpha, step one.</strong> Read-only is the first step toward a complete distributed filesystem. Nothing has been released and it has not run in production. <a href="/compare/">See how it compares with mature systems today.</a></p>
     <h2>Native packages</h2>
     <ul class="pkgs">
