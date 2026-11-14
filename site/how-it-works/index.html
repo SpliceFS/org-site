@@ -373,6 +373,7 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
           <ul>
             <li><strong>You cannot write.</strong> The folder is read-only.</li>
             <li><strong>It does not copy files between servers.</strong> Your sync tool does that.</li>
+            <li><strong>Files must arrive whole.</strong> A file has to appear in a share complete: written under a temporary name and renamed at the end, as Syncthing and rsync do by default. A file that is written in place can be served half-written, and with two servers a half-written copy with a newer time is used in place of the complete one.</li>
           </ul>
         </div>
         <div><strong>Rough edges</strong>
