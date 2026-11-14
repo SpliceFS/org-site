@@ -27,6 +27,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Check the pages
+        # The change log page asks GitHub for the release times of three repositories.
+        # With the token of this run the request is not cut off by the limit for
+        # requests that name nobody.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: make check
       - name: Write the upload key and the known hosts line to files
         env:

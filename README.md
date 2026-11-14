@@ -14,12 +14,13 @@ site/changelog/index.html       built, not kept here: what each version changed
 
 ## The change log page
 
-`make changelog` builds it from the `CHANGELOG.md` of the server, the client and the packages
-repository (`scripts/changelog.py` with the page in `scripts/changelog-page.html`). One row per
-version, one column per part. `make check` builds it first, because the other pages link to it.
-Each release of those three repositories asks this repository to publish again, so the page
-follows them. To build it from local files: `CHANGELOG_DIR=folder make changelog`, with
-`server.md`, `client.md` and `packages.md` in that folder.
+`make changelog` builds it (`scripts/changelog.py` with the page in `scripts/changelog-page.html`)
+from the `CHANGELOG.md` and the GitHub release list of the server, the client and the packages
+repository. A row is one version of the code; a packaging change is shown in the row of the code
+version that was current when it went out, and the packages version numbers are not shown. To
+build it from local files: `CHANGELOG_DIR=folder make changelog`, with `server.md`, `client.md`,
+`packages.md`, `server.json`, `client.json` and `packages.json` (the answers of
+`GET /repos/SpliceFS/<repo>/releases?per_page=100`) in that folder.
 
 ## Changing a page
 
