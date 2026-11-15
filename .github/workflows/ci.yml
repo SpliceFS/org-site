@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check the pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the pages
+        # The change log page asks GitHub for the release times of three repositories.
+        # With the token of this run the request is not cut off by the limit for
+        # requests that name nobody.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make check
+      - name: Lint the scripts
+        run: make lint
+      # The publish script against a local folder: the same rsync call, without the server.
+      - name: Publish into a folder
+        run: UPLOAD_TARGET="$RUNNER_TEMP/out/" scripts/publish.sh && test -f "$RUNNER_TEMP/out/index.html"

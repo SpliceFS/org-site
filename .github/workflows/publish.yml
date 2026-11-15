@@ -1,0 +1,75 @@
+name: Publish
+
+# Every change of main is checked and then published to https://splicefs.org.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # Sent by the release of the server, the client and the packages: the change log page
+  # is built from their change log files, so it is published again after each release.
+  repository_dispatch:
+    types: [release-published]
+
+permissions:
+  contents: read
+
+# One publish at a time, in order, so that an older run never overwrites a newer one.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Check and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the pages
+        # The change log page asks GitHub for the release times of three repositories.
+        # With the token of this run the request is not cut off by the limit for
+        # requests that name nobody.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make check
+      - name: Write the upload key and the known hosts line to files
+        env:
+          UPLOAD_SSH_KEY: ${{ secrets.UPLOAD_SSH_KEY }}
+          UPLOAD_KNOWN_HOSTS: ${{ vars.UPLOAD_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          printf '%s\n' "$UPLOAD_SSH_KEY" > "$RUNNER_TEMP/upload_key"
+          printf '%s\n' "$UPLOAD_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+      - name: Publish
+        env:
+          UPLOAD_KEY_FILE: ${{ runner.temp }}/upload_key
+          UPLOAD_KNOWN_HOSTS_FILE: ${{ runner.temp }}/known_hosts
+        run: scripts/publish.sh
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload_key"
+      # The page a visitor gets must be the page in this commit.
+      - name: Compare the live home page with this commit
+        run: |
+          want="$(sha256sum site/index.html | cut -d ' ' -f 1)"
+          for attempt in 1 2 3 4 5; do
+            have="$(curl -fsS https://splicefs.org/ | sha256sum | cut -d ' ' -f 1)" || have=""
+            [ "$have" = "$want" ] && { echo "live home page matches"; exit 0; }
+            sleep 5
+          done
+          echo "::error::the live home page differs from site/index.html"
+          exit 1
+
+  # A failed run of this workflow opens an issue assigned to the account in the repository
+  # variable ALERT_ASSIGNEE, so that someone gets an email; GitHub sends none for runs the
+  # bots start. Pull requests are left out: their author sees the failed check there.
+  alert:
+    name: Report a failure
+    needs: [publish]
+    if: ${{ failure() && github.event_name != 'pull_request' }}
+    permissions:
+      issues: write
+    uses: SpliceFS/.github/.github/workflows/report-failure-v1.yml@main
+    with:
+      assignee: ${{ vars.ALERT_ASSIGNEE }}

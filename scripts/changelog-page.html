@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Change log - SpliceFS</title>
+<meta name="description" content="What went out with each version of the SpliceFS server, the client and the packages, newest version first.">
+<style>
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #59636e;
+  --border: #d1d9e0;
+  --accent: #0b6b85;
+  --hover-bg: #f6f8fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #9198a1;
+    --border: #30363d;
+    --accent: #4fc3dc;
+    --hover-bg: #161b22;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 1px solid var(--border); }
+header.top .wrap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; padding-top: 16px; padding-bottom: 16px; }
+.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; color: inherit; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.nav a { font-size: 14px; text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
+main { padding: 48px 0 24px; }
+h1 { font-size: 32px; line-height: 1.2; margin: 0 0 16px; letter-spacing: -0.02em; }
+h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 8px; }
+p { margin: 0 0 16px; }
+.lede { font-size: 18px; }
+.small { font-size: 14px; color: var(--muted); }
+.status { border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; }
+.status-row { display: flex; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); }
+.status-row:first-child { border-top: 0; }
+.status-name { flex: 0 0 150px; }
+.status-name a { font-weight: 600; text-decoration: none; }
+.status-name span { display: block; font-size: 13px; color: var(--muted); }
+.status-badges { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.status-badges img { display: block; height: 20px; }
+@media (max-width: 560px) { .status-row { flex-direction: column; align-items: flex-start; gap: 8px; } .status-name { flex: none; } }
+footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 48px; font-size: 14px; color: var(--muted); }
+@media (max-width: 560px) { h1 { font-size: 26px; } }
+
+/* The change log table. The three part columns share the width equally, so a long entry in one
+   part does not squeeze the others. */
+table.log { border-collapse: collapse; width: 100%; table-layout: fixed; margin: 24px 0 0; font-size: 15px; }
+.log th, .log td { text-align: left; vertical-align: top; padding: 12px; border-top: 1px solid var(--border); overflow-wrap: break-word; }
+.log thead th { border-top: 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+.log thead th:first-child { width: 84px; }
+.log tbody th { font-weight: 700; white-space: nowrap; }
+.log tbody th a { text-decoration: none; }
+.log ul { margin: 0; padding-left: 18px; }
+.log li { margin: 0 0 6px; }
+.log li:last-child { margin-bottom: 0; }
+.when { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+li.internal { color: var(--muted); }
+.log code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.92em; }
+.log tr:target { background: var(--hover-bg); }
+
+/* On a narrow screen three columns of text are unreadable, so each version becomes one block
+   with the part names written in front of each part. A part with no entry is left out. */
+@media (max-width: 759px) {
+  .log thead { display: none; }
+  .log, .log tbody, .log tr, .log th, .log td { display: block; }
+  .log tbody tr { border-top: 1px solid var(--border); padding: 8px 0; }
+  .log tbody tr:first-child { border-top: 0; }
+  .log th, .log td { border-top: 0; padding: 4px 12px; }
+  .log tbody th { font-size: 18px; }
+  .log td::before { content: attr(data-label); display: block; font-weight: 700; font-size: 13px; }
+  .log td.none { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="/">SpliceFS</a>
+    <nav class="nav" aria-label="Site">
+      <a href="/how-it-works/">How it works</a>
+      <a href="/compare/">Compare</a>
+      <a href="/changelog/" aria-current="page">Change log</a>
+      <a href="https://packages.splicefs.org/">Install</a>
+      <a href="https://github.com/SpliceFS">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <h1>Change log</h1>
+    <p class="lede">What went out with each version of the server, the client and the packages.</p>
+    <p class="small">Every merge is a release, and a row is one version of the code. The server and the client count the last number separately. The packages column shows a change to how SpliceFS is installed, in the row of the code version that was current when it went out.</p>
+    <table class="log">
+      <thead>
+        <tr>
+          <th scope="col">Version</th>
+          <th scope="col">Server</th>
+          <th scope="col">Client</th>
+          <th scope="col">Packages</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ROWS -->
+      </tbody>
+    </table>
+    <h2 id="build-status">Build status</h2>
+    <p class="small">Live results of the builds, tests and security scans of every repository. Each badge links to its report.</p>
+    <div class="status">
+      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/server">server</a><span>splicefsd, the server</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/server/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/server/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/server/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/server/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://codecov.io/gh/SpliceFS/server"><img src="https://codecov.io/gh/SpliceFS/server/graph/badge.svg" alt="Test coverage" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_server"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_server&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/server"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/server/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16604"><img src="https://www.bestpractices.dev/projects/16604/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
+      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/client">client</a><span>splicefs, the client</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/client/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/client/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/client/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/client/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://codecov.io/gh/SpliceFS/client"><img src="https://codecov.io/gh/SpliceFS/client/graph/badge.svg" alt="Test coverage" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_client"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_client&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/client"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/client/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16606"><img src="https://www.bestpractices.dev/projects/16606/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
+      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/common">common</a><span>shared Go packages</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/common/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/common/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/common/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/common/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://codecov.io/gh/SpliceFS/common"><img src="https://codecov.io/gh/SpliceFS/common/graph/badge.svg" alt="Test coverage" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_common"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_common&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/common"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/common/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16607"><img src="https://www.bestpractices.dev/projects/16607/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
+      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/packages">packages</a><span>install script and package site</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/packages/actions/workflows/ci.yml"><img src="https://github.com/SpliceFS/packages/actions/workflows/ci.yml/badge.svg" alt="Build" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/packages/actions/workflows/install-tests.yml"><img src="https://github.com/SpliceFS/packages/actions/workflows/install-tests.yml/badge.svg" alt="Install tests" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/packages/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/packages/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://sonarcloud.io/summary/overall?id=SpliceFS_packages"><img src="https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_packages&amp;metric=alert_status" alt="Quality gate" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/packages"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/packages/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a><a href="https://www.bestpractices.dev/projects/16609"><img src="https://www.bestpractices.dev/projects/16609/badge" alt="OpenSSF Best Practices" height="20" loading="lazy"></a></div></div>
+      <div class="status-row"><div class="status-name"><a href="https://github.com/SpliceFS/homebrew-tap">homebrew-tap</a><span>Homebrew formulas for macOS</span></div><div class="status-badges"><a href="https://github.com/SpliceFS/homebrew-tap/actions/workflows/tests.yml"><img src="https://github.com/SpliceFS/homebrew-tap/actions/workflows/tests.yml/badge.svg" alt="Formula tests" height="20" loading="lazy"></a><a href="https://github.com/SpliceFS/homebrew-tap/actions/workflows/security.yml"><img src="https://github.com/SpliceFS/homebrew-tap/actions/workflows/security.yml/badge.svg" alt="Security scan" height="20" loading="lazy"></a><a href="https://scorecard.dev/viewer/?uri=github.com/SpliceFS/homebrew-tap"><img src="https://api.securityscorecards.dev/projects/github.com/SpliceFS/homebrew-tap/badge" alt="OpenSSF Scorecard" height="20" loading="lazy"></a></div></div>
+    </div>
+  </div>
+</main>
+<footer>
+  <div class="wrap">SpliceFS is open source under the MIT license.</div>
+</footer>
+</body>
+</html>
