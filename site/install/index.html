@@ -1294,7 +1294,7 @@ sysrc splicefs_enable=YES &amp;&amp; service splicefs start      # the client
           <summary>Run as yourself</summary>
           <div class="block"><div class="bar"><span class="label">Once, as root, before the first start</span></div><pre><code>sysctl vfs.usermount=1
 echo 'vfs.usermount=1' &gt;&gt; /etc/sysctl.conf
-sysrc kld_list+=fusefs &amp;&amp; kldload fusefs
+sysrc kld_list+=fusefs &amp;&amp; kldload -n fusefs
 pw groupmod operator -m alice
 printf '[fuse_users=10]\nadd path fuse mode 0660 group operator\n' &gt;&gt; /etc/devfs.rules
 sysrc devfs_system_ruleset=fuse_users &amp;&amp; service devfs restart
