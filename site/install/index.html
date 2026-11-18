@@ -71,19 +71,17 @@ h1 { font-size: 32px; line-height: 1.2; margin: 0 0 16px; letter-spacing: -0.02e
 p { margin: 0 0 16px; }
 .lead { font-size: 19px; margin: 0 0 8px; }
 .small { font-size: 14px; color: var(--muted); margin: 0; }
-h2 { font-size: 22px; line-height: 1.3; margin: 0 0 16px; }
-h3.panel-title { font-size: 20px; line-height: 1.3; margin: 0 0 16px; }
-section.one { margin-top: 40px; }
+h2 { font-size: 26px; line-height: 1.25; margin: 0 0 4px; letter-spacing: -0.01em; }
+h3 { font-size: 22px; line-height: 1.3; margin: 0 0 16px; }
+section.one { margin-top: 32px; }
 section.more { border-top: 1px solid var(--border); margin-top: 48px; padding-top: 32px; }
 details { border-top: 1px solid var(--border); padding: 12px 0; }
 section.more details:last-child { border-bottom: 1px solid var(--border); }
 summary { cursor: pointer; font-weight: 600; }
 details[open] > summary { margin-bottom: 12px; }
 details p { margin: 0 0 12px; }
-main ul { margin: 0 0 12px; padding-left: 20px; }
-main li { margin: 4px 0; }
-.chooser { display: none; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 16px; }
-html.js .chooser { display: flex; }
+.chooser { display: none; margin: 24px 0 0; }
+html.js .chooser { display: block; }
 .seg-group { display: flex; flex-wrap: wrap; gap: 6px; }
 .seg {
   font: inherit; font-size: 14px; line-height: 1; padding: 8px 12px; color: var(--fg); background: var(--bg);
@@ -92,23 +90,10 @@ html.js .chooser { display: flex; }
 }
 .seg:hover { border-color: var(--accent); }
 .seg[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-tint); box-shadow: inset 0 0 0 1px var(--accent); }
-html.js .nojs { display: none; }
+section.os { margin-top: 48px; }
+html.js section.os { display: none; margin-top: 32px; }
+html.js section.os.active { display: block; }
 section.one p { margin: 0 0 12px; }
-.picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
-.card {
-  display: block; height: 100%; padding: 16px; text-decoration: none; color: var(--fg);
-  border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
-  transition: border-color .15s, background-color .15s;
-}
-.card:hover { border-color: var(--accent); background: var(--hover-bg); }
-.card[aria-current="true"] { border-color: var(--accent); background: var(--accent-tint); box-shadow: inset 0 0 0 1px var(--accent); }
-.card .name { display: block; font-weight: 500; font-size: 17px; }
-.card .versions { display: block; font-size: 14px; color: var(--muted); margin-top: 2px; }
-.hint { margin: 16px 0 0; color: var(--muted); }
-.panel { margin-top: 32px; }
-.panel[hidden] { display: none; }
-html.js .panel { display: none; margin-top: 32px; }
-html.js .panel.active { display: block; }
 .block { border: 1px solid var(--border); border-radius: 8px; background: var(--code-bg); margin: 0 0 12px; min-width: 0; overflow: hidden; }
 .bar { display: flex; align-items: center; justify-content: space-between; min-height: 38px; padding: 4px 8px 4px 16px; border-bottom: 1px solid var(--border); }
 .label { font-size: 13px; color: var(--muted); }
@@ -138,9 +123,8 @@ footer p { margin: 0 0 4px; }
 footer .keys a { margin-right: 16px; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 @media (max-width: 560px) { h1 { font-size: 26px; } }
-@media (max-width: 520px) { .picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) {
-  .card, .copy, .seg { transition: none; }
+  .copy, .seg { transition: none; }
 }
 </style>
 </head>
@@ -161,119 +145,75 @@ footer .keys a { margin-right: 16px; }
   <div class="wrap">
     <h1>Install SpliceFS</h1>
     <p class="lead">Linux and FreeBSD, on x86-64 and arm64.</p>
-
-    <section class="one" id="one">
-      <h2>Step 1: Set up the repository</h2>
-      <p>Installs no package. As root, leave out sudo.</p>
-      <div class="chooser">
-        <div class="seg-group" role="group" aria-label="Download tool">
-          <button type="button" class="seg" data-tool="curl" aria-pressed="true">curl</button>
-          <button type="button" class="seg" data-tool="wget" aria-pressed="false">wget</button>
-          <button type="button" class="seg" data-tool="fetch" aria-pressed="false">fetch</button>
-        </div>
+    <div class="chooser">
+      <div class="seg-group" role="group" aria-label="Operating system">
+        <button type="button" class="seg" data-os="debian" aria-pressed="false">Debian</button>
+        <button type="button" class="seg" data-os="ubuntu" aria-pressed="false">Ubuntu</button>
+        <button type="button" class="seg" data-os="rhel" aria-pressed="false">Red Hat Enterprise Linux</button>
+        <button type="button" class="seg" data-os="rocky" aria-pressed="false">Rocky Linux</button>
+        <button type="button" class="seg" data-os="almalinux" aria-pressed="false">AlmaLinux</button>
+        <button type="button" class="seg" data-os="amazon" aria-pressed="false">Amazon Linux</button>
+        <button type="button" class="seg" data-os="opensuse" aria-pressed="false">openSUSE Leap</button>
+        <button type="button" class="seg" data-os="alpine" aria-pressed="false">Alpine Linux</button>
+        <button type="button" class="seg" data-os="freebsd" aria-pressed="false">FreeBSD</button>
       </div>
-      <div class="block" id="oneblock"><div class="bar"><span class="label">curl</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+    </div>
+
+    <section class="os" id="debian" data-os="debian">
+      <h2>Debian</h2>
+      <p class="small">Debian 12 and 13.</p>
+
+      <section class="one" id="debian-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <p>A new Debian has neither curl nor wget. Install curl first:</p>
+        <div class="block"><div class="bar"><span class="label">Debian: install curl</span></div><pre><code>sudo apt-get update &amp;&amp; sudo apt-get install -y curl
+</code></pre></div>
+        <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
   sudo sh ~/splicefs-setup.sh
 </code></pre></div>
-      <div class="block nojs"><div class="bar"><span class="label">wget</span></div><pre><code>wget -qO ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
-  sudo sh ~/splicefs-setup.sh
-</code></pre></div>
-      <div class="block nojs"><div class="bar"><span class="label">fetch (FreeBSD, as root)</span></div><pre><code>fetch -o ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
-  sh ~/splicefs-setup.sh
-</code></pre></div>
-      <details>
-        <summary>Verify the signatures</summary>
-        <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
 curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
 gpg --show-keys --fingerprint ~/splicefs.asc
 gpg --import ~/splicefs.asc
 </code></pre></div>
-        <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
-        <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
   gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
 </code></pre></div>
-      </details>
-    </section>
+        </details>
+      </section>
 
-    <section class="one" id="two">
-      <h2>Step 2: Install</h2>
-      <div class="chooser">
-        <div class="seg-group" role="group" aria-label="System">
-          <button type="button" class="seg" data-family="apt" aria-pressed="true">Debian, Ubuntu</button>
-          <button type="button" class="seg" data-family="dnf" aria-pressed="false">RHEL, Rocky, AlmaLinux, Amazon</button>
-          <button type="button" class="seg" data-family="zypper" aria-pressed="false">openSUSE</button>
-          <button type="button" class="seg" data-family="apk" aria-pressed="false">Alpine</button>
-          <button type="button" class="seg" data-family="pkg" aria-pressed="false">FreeBSD</button>
-        </div>
-      </div>
-      <div class="block" data-family="apt"><div class="bar"><span class="label">Debian, Ubuntu</span></div><pre><code>sudo apt-get update
+      <section class="one" id="debian-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code>sudo apt-get update
 sudo apt-get install splicefs-server    # the server
 sudo apt-get install splicefs-client    # the client
 </code></pre></div>
-      <div class="block" data-family="dnf"><div class="bar"><span class="label">RHEL, Rocky, AlmaLinux, Amazon</span></div><pre><code>sudo dnf makecache
-sudo dnf install splicefs-server    # the server
-sudo dnf install splicefs-client    # the client
-</code></pre></div>
-      <div class="block" data-family="zypper"><div class="bar"><span class="label">openSUSE</span></div><pre><code>sudo zypper refresh
-sudo zypper install splicefs-server    # the server
-sudo zypper install splicefs-client    # the client
-</code></pre></div>
-      <div class="block" data-family="apk"><div class="bar"><span class="label">Alpine, as root</span></div><pre><code>apk update
-apk add splicefs-server    # the server
-apk add splicefs-client    # the client
-</code></pre></div>
-      <div class="block" data-family="pkg"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>pkg update
-pkg install splicefs-server    # the server
-pkg install splicefs-client    # the client
-</code></pre></div>
-    </section>
+      </section>
 
-    <section class="one" id="start">
-      <h2>Step 3: Start the service</h2>
-      <p>Installing does not start the service.</p>
-      <div class="chooser">
-        <div class="seg-group" role="group" aria-label="Service manager">
-          <button type="button" class="seg" data-init="systemd" aria-pressed="true">systemd</button>
-          <button type="button" class="seg" data-init="openrc" aria-pressed="false">OpenRC</button>
-          <button type="button" class="seg" data-init="freebsd" aria-pressed="false">FreeBSD</button>
-        </div>
-      </div>
-      <div class="block" data-init="systemd"><div class="bar"><span class="label">systemd</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+      <section class="one" id="debian-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
 sudo systemctl enable --now splicefs     # the client
 </code></pre></div>
-      <div class="block" data-init="openrc"><div class="bar"><span class="label">OpenRC (Alpine), as root</span></div><pre><code>rc-update add splicefsd default &amp;&amp; rc-service splicefsd start    # the server
-rc-update add splicefs default &amp;&amp; rc-service splicefs start      # the client
-</code></pre></div>
-      <div class="block" data-init="freebsd"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>sysrc splicefsd_enable=YES &amp;&amp; service splicefsd start    # the server
-sysrc splicefs_enable=YES &amp;&amp; service splicefs start      # the client
-</code></pre></div>
-      <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
-    </section>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
 
-    <section class="more">
-      <h2>Other tasks</h2>
-      <details>
-        <summary>Mount at boot</summary>
-        <div class="chooser">
-          <div class="seg-group" role="group" aria-label="Service manager">
-            <button type="button" class="seg" data-init="systemd" aria-pressed="true">systemd</button>
-            <button type="button" class="seg" data-init="openrc" aria-pressed="false">OpenRC</button>
-            <button type="button" class="seg" data-init="freebsd" aria-pressed="false">FreeBSD</button>
-          </div>
-        </div>
-        <div class="block" data-init="systemd"><div class="bar"><span class="label">systemd, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="debian-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">Debian, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
 </code></pre></div>
-        <div class="block" data-init="openrc"><div class="bar"><span class="label">OpenRC (Alpine), as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail 0 0' &gt;&gt; /etc/fstab
-rc-update add fuse boot &amp;&amp; rc-service fuse start
-rc-update add netmount default &amp;&amp; rc-service netmount start
-</code></pre></div>
-        <div class="block" data-init="freebsd"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs ro,late,failok,mountprog=/usr/local/sbin/mount.splicefs 0 0' &gt;&gt; /etc/fstab
-</code></pre></div>
-        <p class="small">The client's cluster must be defined and its service running.</p>
-      </details>
-      <details id="user">
-        <summary>Run as yourself</summary>
-        <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="debian-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
 config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
 mkdir -p "$config/clusters.d" "$config/secrets" ~/files
 
@@ -288,54 +228,29 @@ EOF
 # Start the client as yourself. It stays in the foreground: give it a terminal of its own.
 splicefs
 </code></pre></div>
-        <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
 splicefsctl mount example:/ ~/files
 splicefsctl status
 ls ~/files
 cat ~/files/media/hello.txt   # a file of your cluster
 splicefsctl umount ~/files
 </code></pre></div>
-        <div class="block"><div class="bar"><span class="label">FreeBSD, once, as root, before the first start</span></div><pre><code>sysctl vfs.usermount=1
-echo 'vfs.usermount=1' &gt;&gt; /etc/sysctl.conf
-sysrc kld_list+=fusefs &amp;&amp; kldload fusefs
-pw groupmod operator -m alice
-printf '[fuse_users=10]\nadd path fuse mode 0660 group operator\n' &gt;&gt; /etc/devfs.rules
-sysrc devfs_system_ruleset=fuse_users &amp;&amp; service devfs restart
-</code></pre></div>
-        <p class="small">Leave the service off. Needs client 0.5.36 or newer. Linux without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root. Tested on Linux, not yet on FreeBSD.</p>
-      </details>
-      <details>
-        <summary>Upgrade</summary>
-        <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>service splicefsd restart    # the server
-service splicefs restart     # the client
-</code></pre></div>
-        <p class="small">Linux restarts a running service by itself; FreeBSD keeps the old version running until this.</p>
-      </details>
-      <details id="remove">
-        <summary>Remove the repository</summary>
-        <div class="block" id="removeblock"><div class="bar"><span class="label">curl</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="debian-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="debian-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
   sudo sh ~/splicefs-setup.sh --remove
 </code></pre></div>
-        <div class="block nojs"><div class="bar"><span class="label">wget</span></div><pre><code>wget -qO ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
-  sudo sh ~/splicefs-setup.sh --remove
-</code></pre></div>
-        <div class="block nojs"><div class="bar"><span class="label">fetch (FreeBSD, as root)</span></div><pre><code>fetch -o ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
-  sh ~/splicefs-setup.sh --remove
-</code></pre></div>
-        <p class="small">Removes no package. A file you changed stays, with a warning.</p>
-      </details>
-      <details id="uninstall">
-        <summary>Uninstall completely</summary>
-        <div class="chooser">
-          <div class="seg-group" role="group" aria-label="System">
-            <button type="button" class="seg" data-family="apt" aria-pressed="true">Debian, Ubuntu</button>
-            <button type="button" class="seg" data-family="dnf" aria-pressed="false">RHEL, Rocky, AlmaLinux, Amazon</button>
-            <button type="button" class="seg" data-family="zypper" aria-pressed="false">openSUSE</button>
-            <button type="button" class="seg" data-family="apk" aria-pressed="false">Alpine</button>
-            <button type="button" class="seg" data-family="pkg" aria-pressed="false">FreeBSD</button>
-          </div>
-        </div>
-        <div class="block" data-family="apt"><div class="bar"><span class="label">Debian, Ubuntu</span></div><pre><code># Remove the packages and their configuration files:
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="debian-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code># Remove the packages and their configuration files:
 sudo apt-get purge splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -348,78 +263,11 @@ sudo userdel splicefs
 # Remove the repository and the signing key, with the setup script from step 1:
 sudo sh ~/splicefs-setup.sh --remove
 </code></pre></div>
-        <div class="block" data-family="dnf"><div class="bar"><span class="label">RHEL, Rocky, AlmaLinux, Amazon</span></div><pre><code># Remove the packages:
-sudo dnf remove splicefs-server splicefs-client
-
-# Remove the packages they needed that nothing else needs now:
-sudo dnf autoremove
-
-# Delete the data and the configuration folder, then the user and its group:
-sudo rm -rf /var/lib/splicefs /etc/splicefs
-sudo userdel splicefs
-
-# Remove the repository and the signing key, with the setup script from step 1:
-sudo sh ~/splicefs-setup.sh --remove
-</code></pre></div>
-        <div class="block" data-family="zypper"><div class="bar"><span class="label">openSUSE</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now:
-sudo zypper remove --clean-deps splicefs-server splicefs-client
-
-# Delete the data and the configuration folder, then the user and its group:
-sudo rm -rf /var/lib/splicefs /etc/splicefs
-sudo userdel splicefs
-
-# Remove the repository and the signing key, with the setup script from step 1:
-sudo sh ~/splicefs-setup.sh --remove
-</code></pre></div>
-        <div class="block" data-family="apk"><div class="bar"><span class="label">Alpine, as root</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now:
-apk del splicefs-server splicefs-client
-
-# Delete the data, the logs and the configuration folder, then the user and its group:
-rm -rf /var/lib/splicefs /etc/splicefs /var/log/splicefsd.log /var/log/splicefs.log
-deluser splicefs
-
-# Remove the repository and the signing key, with the setup script from step 1:
-sh ~/splicefs-setup.sh --remove
-</code></pre></div>
-        <div class="block" data-family="pkg"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code># Remove the packages:
-pkg delete splicefs-server splicefs-client
-
-# Delete the settings of the services from /etc/rc.conf, which removing a package leaves alone:
-sysrc -x splicefsd_enable
-sysrc -x splicefs_enable
-
-# Remove the packages they needed that nothing else needs now:
-pkg autoremove
-
-# Delete the data and the configuration folder, then the user and its group:
-rm -rf /var/db/splicefs /usr/local/etc/splicefs
-pw userdel splicefs
-
-# Remove the repository and the signing key, with the setup script from step 1:
-sh ~/splicefs-setup.sh --remove
-</code></pre></div>
-        <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
-      </details>
-      <details id="manual">
-        <summary>Set up the repository by hand</summary>
-        <ul class="picker" id="picker">
-          <li><a class="card" href="#debian" data-panel="panel-apt"><span class="name">Debian</span><span class="versions">12, 13</span></a></li>
-          <li><a class="card" href="#ubuntu" data-panel="panel-apt"><span class="name">Ubuntu</span><span class="versions">22.04, 24.04, 26.04</span></a></li>
-          <li><a class="card" href="#rhel" data-panel="panel-dnf"><span class="name">RHEL</span><span class="versions">8, 9, 10</span></a></li>
-          <li><a class="card" href="#rocky" data-panel="panel-dnf"><span class="name">Rocky Linux</span><span class="versions">8, 9, 10</span></a></li>
-          <li><a class="card" href="#almalinux" data-panel="panel-dnf"><span class="name">AlmaLinux</span><span class="versions">8, 9, 10</span></a></li>
-          <li><a class="card" href="#amazon" data-panel="panel-dnf"><span class="name">Amazon Linux</span><span class="versions">2023</span></a></li>
-          <li><a class="card" href="#opensuse" data-panel="panel-zypper"><span class="name">openSUSE Leap</span><span class="versions">16.0</span></a></li>
-          <li><a class="card" href="#alpine" data-panel="panel-apk"><span class="name">Alpine</span><span class="versions">3.22, 3.23, 3.24</span></a></li>
-          <li><a class="card" href="#freebsd" data-panel="panel-pkg"><span class="name">FreeBSD</span><span class="versions">14, 15</span></a></li>
-        </ul>
-
-        <p class="hint" id="hint" hidden>Pick a system above.</p>
-
-        <section class="panel" id="panel-apt">
-          <a id="debian"></a><a id="ubuntu"></a>
-          <h3 class="panel-title">Debian and Ubuntu</h3>
-          <div class="block"><div class="bar"><span class="label">Shell</span></div><pre><code># Add the SpliceFS signing key:
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="debian-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code># Add the SpliceFS signing key:
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -440,12 +288,246 @@ sudo apt-get update
 sudo apt-get install splicefs-server    # the server
 sudo apt-get install splicefs-client    # the client
 </code></pre></div>
-        </section>
+        </details>
+      </section>
+    </section><!-- end debian -->
 
-        <section class="panel" id="panel-dnf">
-          <a id="rhel"></a><a id="rocky"></a><a id="almalinux"></a><a id="amazon"></a>
-          <h3 class="panel-title">RHEL, Rocky Linux, AlmaLinux and Amazon Linux</h3>
-          <div class="block"><div class="bar"><span class="label">Shell</span></div><pre><code># Add the SpliceFS signing key:
+    <section class="os" id="ubuntu" data-os="ubuntu">
+      <h2>Ubuntu</h2>
+      <p class="small">Ubuntu 22.04, 24.04 and 26.04.</p>
+
+      <section class="one" id="ubuntu-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="ubuntu-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code>sudo apt-get update
+sudo apt-get install splicefs-server    # the server
+sudo apt-get install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="ubuntu-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+sudo systemctl enable --now splicefs     # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="ubuntu-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">Ubuntu, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="ubuntu-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="ubuntu-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="ubuntu-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="ubuntu-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code># Remove the packages and their configuration files:
+sudo apt-get purge splicefs-server splicefs-client
+
+# Remove the packages they needed that nothing else needs now:
+sudo apt-get autoremove --purge
+
+# Delete the data and the configuration folder, then the user and its group:
+sudo rm -rf /var/lib/splicefs /etc/splicefs
+sudo userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="ubuntu-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code># Add the SpliceFS signing key:
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.asc -o /etc/apt/keyrings/splicefs.asc
+sudo chmod a+r /etc/apt/keyrings/splicefs.asc
+
+# Add the repository to apt sources:
+sudo tee /etc/apt/sources.list.d/splicefs.sources &gt;/dev/null &lt;&lt;'EOF'
+Types: deb
+URIs: https://packages.splicefs.org/server/apt https://packages.splicefs.org/client/apt
+Suites: stable
+Components: main
+Signed-By: /etc/apt/keyrings/splicefs.asc
+EOF
+
+# Update the package index, then install the server, the client, or both:
+sudo apt-get update
+sudo apt-get install splicefs-server    # the server
+sudo apt-get install splicefs-client    # the client
+</code></pre></div>
+        </details>
+      </section>
+    </section><!-- end ubuntu -->
+
+    <section class="os" id="rhel" data-os="rhel">
+      <h2>Red Hat Enterprise Linux</h2>
+      <p class="small">Red Hat Enterprise Linux 8, 9 and 10.</p>
+
+      <section class="one" id="rhel-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="rhel-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code>sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="rhel-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+sudo systemctl enable --now splicefs     # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="rhel-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="rhel-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="rhel-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="rhel-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="rhel-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code># Remove the packages:
+sudo dnf remove splicefs-server splicefs-client
+
+# Remove the packages they needed that nothing else needs now:
+sudo dnf autoremove
+
+# Delete the data and the configuration folder, then the user and its group:
+sudo rm -rf /var/lib/splicefs /etc/splicefs
+sudo userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="rhel-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code># Add the SpliceFS signing key:
 sudo install -m 0755 -d /etc/pki/rpm-gpg
 sudo curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
 sudo chmod a+r /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
@@ -475,12 +557,530 @@ sudo dnf makecache
 sudo dnf install splicefs-server    # the server
 sudo dnf install splicefs-client    # the client
 </code></pre></div>
-        </section>
+        </details>
+      </section>
+    </section><!-- end rhel -->
 
-        <section class="panel" id="panel-zypper">
-          <a id="opensuse"></a>
-          <h3 class="panel-title">openSUSE Leap</h3>
-          <div class="block"><div class="bar"><span class="label">Shell</span></div><pre><code># Add the SpliceFS signing key:
+    <section class="os" id="rocky" data-os="rocky">
+      <h2>Rocky Linux</h2>
+      <p class="small">Rocky Linux 8, 9 and 10.</p>
+
+      <section class="one" id="rocky-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="rocky-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code>sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="rocky-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+sudo systemctl enable --now splicefs     # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="rocky-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">Rocky Linux, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="rocky-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="rocky-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="rocky-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="rocky-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code># Remove the packages:
+sudo dnf remove splicefs-server splicefs-client
+
+# Remove the packages they needed that nothing else needs now:
+sudo dnf autoremove
+
+# Delete the data and the configuration folder, then the user and its group:
+sudo rm -rf /var/lib/splicefs /etc/splicefs
+sudo userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="rocky-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code># Add the SpliceFS signing key:
+sudo install -m 0755 -d /etc/pki/rpm-gpg
+sudo curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+sudo chmod a+r /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+
+# Add the repository:
+sudo tee /etc/yum.repos.d/splicefs.repo &gt;/dev/null &lt;&lt;'EOF'
+[splicefs-server]
+name=SpliceFS server
+baseurl=https://packages.splicefs.org/server/rpm/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+
+[splicefs-client]
+name=SpliceFS client
+baseurl=https://packages.splicefs.org/client/rpm/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+EOF
+
+# Update the package index, then install the server, the client, or both:
+sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+        </details>
+      </section>
+    </section><!-- end rocky -->
+
+    <section class="os" id="almalinux" data-os="almalinux">
+      <h2>AlmaLinux</h2>
+      <p class="small">AlmaLinux 8, 9 and 10.</p>
+
+      <section class="one" id="almalinux-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="almalinux-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code>sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="almalinux-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+sudo systemctl enable --now splicefs     # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="almalinux-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">AlmaLinux, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="almalinux-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="almalinux-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="almalinux-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="almalinux-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code># Remove the packages:
+sudo dnf remove splicefs-server splicefs-client
+
+# Remove the packages they needed that nothing else needs now:
+sudo dnf autoremove
+
+# Delete the data and the configuration folder, then the user and its group:
+sudo rm -rf /var/lib/splicefs /etc/splicefs
+sudo userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="almalinux-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code># Add the SpliceFS signing key:
+sudo install -m 0755 -d /etc/pki/rpm-gpg
+sudo curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+sudo chmod a+r /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+
+# Add the repository:
+sudo tee /etc/yum.repos.d/splicefs.repo &gt;/dev/null &lt;&lt;'EOF'
+[splicefs-server]
+name=SpliceFS server
+baseurl=https://packages.splicefs.org/server/rpm/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+
+[splicefs-client]
+name=SpliceFS client
+baseurl=https://packages.splicefs.org/client/rpm/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+EOF
+
+# Update the package index, then install the server, the client, or both:
+sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+        </details>
+      </section>
+    </section><!-- end almalinux -->
+
+    <section class="os" id="amazon" data-os="amazon">
+      <h2>Amazon Linux</h2>
+      <p class="small">Amazon Linux 2023.</p>
+
+      <section class="one" id="amazon-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="amazon-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code>sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="amazon-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+sudo systemctl enable --now splicefs     # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="amazon-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">Amazon Linux, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="amazon-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="amazon-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="amazon-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="amazon-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code># Remove the packages:
+sudo dnf remove splicefs-server splicefs-client
+
+# Remove the packages they needed that nothing else needs now:
+sudo dnf autoremove
+
+# Delete the data and the configuration folder, then the user and its group:
+sudo rm -rf /var/lib/splicefs /etc/splicefs
+sudo userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="amazon-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code># Add the SpliceFS signing key:
+sudo install -m 0755 -d /etc/pki/rpm-gpg
+sudo curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+sudo chmod a+r /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+
+# Add the repository:
+sudo tee /etc/yum.repos.d/splicefs.repo &gt;/dev/null &lt;&lt;'EOF'
+[splicefs-server]
+name=SpliceFS server
+baseurl=https://packages.splicefs.org/server/rpm/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+
+[splicefs-client]
+name=SpliceFS client
+baseurl=https://packages.splicefs.org/client/rpm/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
+EOF
+
+# Update the package index, then install the server, the client, or both:
+sudo dnf makecache
+sudo dnf install splicefs-server    # the server
+sudo dnf install splicefs-client    # the client
+</code></pre></div>
+        </details>
+      </section>
+    </section><!-- end amazon -->
+
+    <section class="os" id="opensuse" data-os="opensuse">
+      <h2>openSUSE Leap</h2>
+      <p class="small">openSUSE Leap 16.0.</p>
+
+      <section class="one" id="opensuse-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package. As root, leave out sudo.</p>
+        <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="opensuse-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code>sudo zypper refresh
+sudo zypper install splicefs-server    # the server
+sudo zypper install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="opensuse-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code>sudo systemctl enable --now splicefsd    # the server
+sudo systemctl enable --now splicefs     # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="opensuse-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">openSUSE Leap, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail,x-systemd.requires=splicefs.service 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="opensuse-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="opensuse-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="opensuse-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code>curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/setup.sh -o ~/splicefs-setup.sh &amp;&amp;
+  sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="opensuse-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now:
+sudo zypper remove --clean-deps splicefs-server splicefs-client
+
+# Delete the data and the configuration folder, then the user and its group:
+sudo rm -rf /var/lib/splicefs /etc/splicefs
+sudo userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sudo sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="opensuse-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code># Add the SpliceFS signing key:
 sudo install -m 0755 -d /etc/pki/rpm-gpg
 sudo curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
 sudo chmod a+r /etc/pki/rpm-gpg/RPM-GPG-KEY-splicefs
@@ -514,12 +1114,115 @@ sudo zypper refresh
 sudo zypper install splicefs-server    # the server
 sudo zypper install splicefs-client    # the client
 </code></pre></div>
-        </section>
+        </details>
+      </section>
+    </section><!-- end opensuse -->
 
-        <section class="panel" id="panel-apk">
-          <a id="alpine"></a>
-          <h3 class="panel-title">Alpine</h3>
-          <div class="block"><div class="bar"><span class="label">Shell, as root</span></div><pre><code># Add the SpliceFS signing key:
+    <section class="os" id="alpine" data-os="alpine">
+      <h2>Alpine Linux</h2>
+      <p class="small">Alpine Linux 3.22, 3.23 and 3.24.</p>
+
+      <section class="one" id="alpine-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package.</p>
+        <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code>wget -qO ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
+  sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="alpine-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code>apk update
+apk add splicefs-server    # the server
+apk add splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="alpine-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code>rc-update add splicefsd default &amp;&amp; rc-service splicefsd start    # the server
+rc-update add splicefs default &amp;&amp; rc-service splicefs start      # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="alpine-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs _netdev,nofail 0 0' &gt;&gt; /etc/fstab
+rc-update add fuse boot &amp;&amp; rc-service fuse start
+rc-update add netmount default &amp;&amp; rc-service netmount start
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="alpine-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Without <code class="inline">/dev/fuse</code>: <code class="inline">modprobe fuse</code> as root.</p>
+        </details>
+        <details id="alpine-upgrade">
+          <summary>Upgrade</summary>
+          <p class="small">An upgrade of the package restarts its running service by itself.</p>
+        </details>
+        <details id="alpine-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code>wget -qO ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
+  sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="alpine-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now:
+apk del splicefs-server splicefs-client
+
+# Delete the data, the logs and the configuration folder, then the user and its group:
+rm -rf /var/lib/splicefs /etc/splicefs /var/log/splicefsd.log /var/log/splicefs.log
+deluser splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="alpine-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code># Add the SpliceFS signing key:
 apk add curl
 curl --proto '=https' --tlsv1.2 -fsSL https://packages.splicefs.org/keys/splicefs.rsa.pub \
   -o /etc/apk/keys/splicefs.rsa.pub
@@ -534,12 +1237,130 @@ apk update
 apk add splicefs-server    # the server
 apk add splicefs-client    # the client
 </code></pre></div>
-        </section>
+        </details>
+      </section>
+    </section><!-- end alpine -->
 
-        <section class="panel" id="panel-pkg">
-          <a id="freebsd"></a>
-          <h3 class="panel-title">FreeBSD</h3>
-          <div class="block"><div class="bar"><span class="label">Shell, as root</span></div><pre><code># Add the SpliceFS signing key:
+    <section class="os" id="freebsd" data-os="freebsd">
+      <h2>FreeBSD</h2>
+      <p class="small">FreeBSD 14 and 15.</p>
+
+      <section class="one" id="freebsd-one">
+        <h3>Step 1: Set up the repository</h3>
+        <p>Installs no package.</p>
+        <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>fetch -o ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
+  sh ~/splicefs-setup.sh
+</code></pre></div>
+        <details>
+          <summary>Verify the signatures</summary>
+          <div class="block"><div class="bar"><span class="label">Get the signed script and the key</span></div><pre><code>curl -fsSLo ~/splicefs-setup.sh.asc https://packages.splicefs.org/setup.sh.asc
+curl -fsSLo ~/splicefs.asc https://packages.splicefs.org/keys/splicefs.asc
+gpg --show-keys --fingerprint ~/splicefs.asc
+gpg --import ~/splicefs.asc
+</code></pre></div>
+          <p>The fingerprint must match the one on <a href="https://github.com/SpliceFS/packages#verify-the-setup-script">GitHub</a>.</p>
+          <div class="block"><div class="bar"><span class="label">Verify, then write out the script</span></div><pre><code>gpg --verify ~/splicefs-setup.sh.asc &amp;&amp;
+  gpg --output ~/splicefs-setup.sh --decrypt ~/splicefs-setup.sh.asc
+</code></pre></div>
+        </details>
+      </section>
+
+      <section class="one" id="freebsd-two">
+        <h3>Step 2: Install</h3>
+        <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>pkg update
+pkg install splicefs-server    # the server
+pkg install splicefs-client    # the client
+</code></pre></div>
+      </section>
+
+      <section class="one" id="freebsd-start">
+        <h3>Step 3: Start the service</h3>
+        <p>Installing does not start the service.</p>
+        <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>sysrc splicefsd_enable=YES &amp;&amp; service splicefsd start    # the server
+sysrc splicefs_enable=YES &amp;&amp; service splicefs start      # the client
+</code></pre></div>
+        <p>Next: <a href="https://github.com/SpliceFS/server/blob/main/docs/configuration.md">server configuration</a>, <a href="https://github.com/SpliceFS/client/blob/main/docs/configuration.md">client configuration</a>.</p>
+      </section>
+
+      <section class="more">
+        <h3>Other tasks</h3>
+        <details id="freebsd-boot">
+          <summary>Mount at boot</summary>
+          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>echo 'example:/ /mnt/files splicefs ro,late,failok,mountprog=/usr/local/sbin/mount.splicefs 0 0' &gt;&gt; /etc/fstab
+</code></pre></div>
+          <p class="small">The client's cluster must be defined and its service running.</p>
+        </details>
+        <details id="freebsd-user">
+          <summary>Run as yourself</summary>
+          <div class="block"><div class="bar"><span class="label">Once, as root, before the first start</span></div><pre><code>sysctl vfs.usermount=1
+echo 'vfs.usermount=1' &gt;&gt; /etc/sysctl.conf
+sysrc kld_list+=fusefs &amp;&amp; kldload fusefs
+pw groupmod operator -m alice
+printf '[fuse_users=10]\nadd path fuse mode 0660 group operator\n' &gt;&gt; /etc/devfs.rules
+sysrc devfs_system_ruleset=fuse_users &amp;&amp; service devfs restart
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 1: your folders, your cluster, the client</span></div><pre><code># Your own folders, in your home directory: your cluster and its password.
+config="${XDG_CONFIG_HOME:-$HOME/.config}/splicefs/client"
+mkdir -p "$config/clusters.d" "$config/secrets" ~/files
+
+# Your cluster. The file name is the cluster name.
+cat &gt; "$config/clusters.d/example.yaml" &lt;&lt;'EOF'
+url: "https://east.example.com/api"
+user: alice
+password_file: secrets/example
+EOF
+(umask 077; cat &gt; "$config/secrets/example")   # type the password, then Ctrl-D
+
+# Start the client as yourself. It stays in the foreground: give it a terminal of its own.
+splicefs
+</code></pre></div>
+          <div class="block"><div class="bar"><span class="label">Terminal 2: mount, read, unmount</span></div><pre><code># In a second terminal: mount the cluster in your folder, see it, read it, unmount it.
+splicefsctl mount example:/ ~/files
+splicefsctl status
+ls ~/files
+cat ~/files/media/hello.txt   # a file of your cluster
+splicefsctl umount ~/files
+</code></pre></div>
+          <p class="small">Leave the service off. Needs client 0.5.36 or newer. Not yet tested on FreeBSD.</p>
+        </details>
+        <details id="freebsd-upgrade">
+          <summary>Upgrade</summary>
+          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>service splicefsd restart    # the server
+service splicefs restart     # the client
+</code></pre></div>
+          <p class="small">An upgrade keeps the old version running until this restart.</p>
+        </details>
+        <details id="freebsd-remove">
+          <summary>Remove the repository</summary>
+          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code>fetch -o ~/splicefs-setup.sh https://packages.splicefs.org/setup.sh &amp;&amp;
+  sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Removes no package. A file you changed stays, with a warning.</p>
+        </details>
+        <details id="freebsd-uninstall">
+          <summary>Uninstall completely</summary>
+          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code># Remove the packages:
+pkg delete splicefs-server splicefs-client
+
+# Delete the settings of the services from /etc/rc.conf, which removing a package leaves alone:
+sysrc -x splicefsd_enable
+sysrc -x splicefs_enable
+
+# Remove the packages they needed that nothing else needs now:
+pkg autoremove
+
+# Delete the data and the configuration folder, then the user and its group:
+rm -rf /var/db/splicefs /usr/local/etc/splicefs
+pw userdel splicefs
+
+# Remove the repository and the signing key, with the setup script from step 1:
+sh ~/splicefs-setup.sh --remove
+</code></pre></div>
+          <p class="small">Also deletes the data, the configuration and the user. Check the package list before you confirm.</p>
+        </details>
+        <details id="freebsd-manual">
+          <summary>Set up the repository by hand</summary>
+          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code># Add the SpliceFS signing key:
 mkdir -p /usr/local/etc/pkg/keys
 fetch -o /usr/local/etc/pkg/keys/splicefs.rsa.pub https://packages.splicefs.org/keys/splicefs.rsa.pub
 
@@ -567,9 +1388,9 @@ pkg update
 pkg install splicefs-server    # the server
 pkg install splicefs-client    # the client
 </code></pre></div>
-        </section>
-      </details>
-    </section>
+        </details>
+      </section>
+    </section><!-- end freebsd -->
   </div>
 </main>
 <footer>
@@ -713,11 +1534,6 @@ function tokenize(text) {
     var code = block.querySelector('code');
     var original = code.textContent;
     highlight(code);
-    block.setText = function (text) {
-      original = text;
-      code.textContent = text;
-      highlight(code);
-    };
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'copy';
@@ -740,93 +1556,50 @@ function tokenize(text) {
     block.querySelector('.bar').appendChild(btn);
   });
 
-  var tool = 'curl';
-  var oneBlock = document.getElementById('oneblock');
-  Array.prototype.forEach.call(document.querySelectorAll('.block.nojs'), function (nojs) {
-    nojs.parentNode.removeChild(nojs);
-  });
-  var toolButtons = Array.prototype.slice.call(document.querySelectorAll('[data-tool]'));
-  var removeBlock = document.getElementById('removeblock');
-  /* The same download for step 1 and for the removal; only what runs the script differs. */
-  function oneText(args) {
-    var base = 'https://packages.splicefs.org/setup.sh';
-    if (tool === 'fetch') return 'fetch -o ~/splicefs-setup.sh ' + base + ' &&\n  sh ~/splicefs-setup.sh' + args + '\n';
-    var get = tool === 'curl'
-      ? 'curl --proto \'=https\' --tlsv1.2 -fsSL ' + base + ' -o ~/splicefs-setup.sh &&\n'
-      : 'wget -qO ~/splicefs-setup.sh ' + base + ' &&\n';
-    return get + '  sudo sh ~/splicefs-setup.sh' + args + '\n';
-  }
-  function chooseOne() {
-    oneBlock.setText(oneText(''));
-    oneBlock.querySelector('.label').textContent = tool;
-    removeBlock.setText(oneText(' --remove'));
-    removeBlock.querySelector('.label').textContent = tool;
-    toolButtons.forEach(function (b) {
-      b.setAttribute('aria-pressed', b.getAttribute('data-tool') === tool ? 'true' : 'false');
-    });
-  }
-  toolButtons.forEach(function (b) {
-    b.addEventListener('click', function () {
-      tool = b.getAttribute('data-tool');
-      chooseOne();
-    });
-  });
+  /* One choice, the system, decides every command on the page. It is kept for the visit
+     and in the address, so a link can lead to one system or to one task of it. */
+  var KEY = 'splicefs-install-system';
+  var systems = Array.prototype.slice.call(document.querySelectorAll('section.os'));
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('button[data-os]'));
 
-  /* A choice holds for the whole page: the system picked for the install is the one the
-     uninstall shows, and the service manager of the start is the one of the boot mounts. */
-  function chooser(attr, first) {
-    var buttons = Array.prototype.slice.call(document.querySelectorAll('button[' + attr + ']'));
-    var blocks = Array.prototype.slice.call(document.querySelectorAll('.block[' + attr + ']'));
-    function choose(value) {
-      buttons.forEach(function (b) {
-        b.setAttribute('aria-pressed', b.getAttribute(attr) === value ? 'true' : 'false');
-      });
-      blocks.forEach(function (block) { block.hidden = block.getAttribute(attr) !== value; });
-    }
+  function known(os) {
+    return systems.some(function (s) { return s.getAttribute('data-os') === os; });
+  }
+  function remembered() {
+    try { return sessionStorage.getItem(KEY); } catch (e) { return null; }
+  }
+  function remember(os) {
+    try { sessionStorage.setItem(KEY, os); } catch (e) { /* the choice then lasts until the page closes */ }
+  }
+  function show(os) {
     buttons.forEach(function (b) {
-      b.addEventListener('click', function () { choose(b.getAttribute(attr)); });
+      b.setAttribute('aria-pressed', b.getAttribute('data-os') === os ? 'true' : 'false');
     });
-    choose(first);
+    systems.forEach(function (s) {
+      s.className = s.getAttribute('data-os') === os ? 'os active' : 'os';
+    });
+    remember(os);
   }
-  chooser('data-family', 'apt');
-  chooser('data-init', 'systemd');
-
-  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
-  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
-  var hint = document.getElementById('hint');
-
-  function select(id) {
-    var chosen = null;
-    cards.forEach(function (card) {
-      var on = card.getAttribute('href') === '#' + id;
-      if (on) { chosen = card; card.setAttribute('aria-current', 'true'); }
-      else card.removeAttribute('aria-current');
-    });
-    panels.forEach(function (p) {
-      var on = !!chosen && p.id === chosen.getAttribute('data-panel');
-      p.className = on ? 'panel active' : 'panel';
-      if (on) {
-        p.querySelector('.panel-title').textContent =
-          chosen.querySelector('.name').textContent + ' ' + chosen.querySelector('.versions').textContent;
-      }
-    });
-    hint.hidden = !!chosen;
+  function fromAddress() {
+    var id = location.hash.slice(1);
+    var os = id.split('-')[0];
+    if (!known(os)) os = known(remembered()) ? remembered() : systems[0].getAttribute('data-os');
+    show(os);
     /* A link into a collapsed part, from this page or another, must show what it points to. */
     var target = id ? document.getElementById(id) : null;
     var part = target ? target.closest('details') : null;
     if (part) part.open = true;
   }
 
-  cards.forEach(function (card) {
-    card.addEventListener('click', function (e) {
-      e.preventDefault();
-      var id = card.getAttribute('href').slice(1);
-      select(id);
-      try { history.replaceState(null, '', '#' + id); } catch (err) { location.hash = id; }
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var os = b.getAttribute('data-os');
+      show(os);
+      try { history.replaceState(null, '', '#' + os); } catch (err) { location.hash = os; }
     });
   });
-  window.addEventListener('hashchange', function () { select(location.hash.slice(1)); });
-  select(location.hash.slice(1));
+  window.addEventListener('hashchange', fromAddress);
+  fromAddress();
 })();
 </script>
 </body>
