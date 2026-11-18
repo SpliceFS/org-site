@@ -67,3 +67,22 @@ class TestInstallPage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+COMPARE_PAGE = ROOT / "site" / "compare" / "index.html"
+ROW = re.compile(r'<tr><th scope="row">([^<]+)</th>(.*?)</tr>', re.DOTALL)
+
+
+class TestComparePage(unittest.TestCase):
+    def rows(self):
+        return ROW.findall(COMPARE_PAGE.read_text(encoding="utf-8"))
+
+    def test_when_to_choose_follows_aims_to_be(self):
+        names = [name for name, _ in self.rows()]
+        self.assertIn("When to choose this option", names)
+        self.assertEqual(names[names.index("Aims to be") + 1], "When to choose this option")
+
+    def test_every_row_has_a_cell_for_each_system(self):
+        for name, cells in self.rows():
+            with self.subTest(row=name):
+                self.assertEqual(cells.count("<td>"), 9)
