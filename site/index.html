@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SpliceFS</title>
-<meta name="description" content="SpliceFS reads every file from all of your servers at once, so their speeds add up. Free, open source, on the hardware you already have. Read-only today, growing into a complete distributed file system.">
+<meta name="description" content="SpliceFS is an open source distributed file system that reads each file from every server that holds it, at the same time. Reading works today; writing is next.">
 <style>
 :root {
   --bg: #ffffff;
@@ -97,6 +97,7 @@ footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 
 .plainlinks li { margin: 0 0 4px; }
 @media (min-width: 641px) {
   .gets, .fit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gets.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>
@@ -116,16 +117,15 @@ footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 
 </header>
 <main>
   <div class="wrap">
-    <h1>Faster files from the servers you already own.</h1>
-    <p class="lead">SpliceFS reads every file from all of your servers at once, so their speeds add up. Free, open source, no new hardware. Today it reads; writing, redundancy and data placement are on the way.</p>
+    <h1>The file system that reads from all your servers at once.</h1>
+    <p class="lead">SpliceFS is an open source distributed file system. It reads each file from every server that holds it, at the same time, so every server you add makes reading faster. Reading works today. Writing is next.</p>
     <p class="cta"><a class="btn primary" href="https://packages.splicefs.org/">Install</a> <a class="btn" href="/how-it-works/">See how it works</a></p>
 
     <h2>What it does today</h2>
-    <ul class="gets">
-      <li class="get"><strong>Go faster</strong><span>Every server you add adds its speed. Three servers at 300 Mbit/s each give one reader up to 900.</span></li>
-      <li class="get"><strong>Spend nothing</strong><span>Free and open source, on the servers and disks you already have. More speed without buying a bigger server.</span></li>
-      <li class="get"><strong>Try it in minutes</strong><span>Your files stay where they are. Install it next to what you run today, and remove it without losing anything.</span></li>
-      <li class="get"><strong>Never wait on one machine</strong><span>When a server slows down or fails, the others take over and work goes on.</span></li>
+    <ul class="gets three">
+      <li class="get"><strong>Faster with every server</strong><span>Three servers that each send 300 Mbit/s give one reader up to 900.</span></li>
+      <li class="get"><strong>Runs on what you have</strong><span>Free and open source, on your servers and disks. Your files stay where they are.</span></li>
+      <li class="get"><strong>Keeps reading</strong><span>If a server slows down or fails, the others keep sending.</span></li>
     </ul>
 
     <h2>What it is growing into</h2>
