@@ -1,0 +1,5 @@
+[
+  {"tag_name": "v0.3.0", "published_at": "2026-11-10T10:00:00Z", "body": "- Third server change."},
+  {"tag_name": "v0.2.0", "published_at": "2026-11-05T10:00:00Z", "body": "- Second server change."},
+  {"tag_name": "v0.1.0", "published_at": "2026-11-01T10:00:00Z", "body": "- First server change."}
+]
