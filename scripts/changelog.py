@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the change log page of splicefs.org from the three CHANGELOG.md files.
+"""Build the change log page of splicefs.org from the three CHANGELOG.md files and the releases.
 
 Usage:
     scripts/changelog.py SERVER.md CLIENT.md PACKAGES.md SERVER.json CLIENT.json PACKAGES.json
@@ -12,17 +12,26 @@ Each change log has one heading per version:
     - A change. A second line of the same change starts with two spaces.
 
 Each JSON file is the answer of the GitHub API for the releases of that repository
-(GET /repos/SpliceFS/<repo>/releases?per_page=100). Only tag_name and published_at are used.
+(GET /repos/SpliceFS/<repo>/releases?per_page=100). Only tag_name, published_at and, for the
+packages, body are used.
+
+The packages repository has two kinds of history. Up to the switch it has the versions of its
+change log. After the switch it has no version numbers: every merge is a release whose tag is
+a plain positive integer (1, 2, 3 ...) and whose notes are one "- " line per change, then a
+"- Release of <program> <tag>." line per program release since the previous number, then an
+HTML comment "<!-- cut: <time> -->". The release lines are left out, because the columns of
+the programs show those releases, and so is the comment. A release with no change line left
+adds nothing: the packages column shows a change only when the packaging changed.
 
 The page is the template scripts/changelog-page.html with the marker <!-- ROWS --> replaced
 by one table row per version of the code, that is per version found in the server or the
-client change log. The packages repository has version numbers of its own, so they make no
-row. Each packaging change is put into the row of the code version that was current when it
-went out: the highest code version released at or before the time of the packaging change.
-A version without a release in the JSON file counts as released at the start of the date in
-its heading, but never before the next lower version of the same repository went out (and
-then one second after it). Exit status 1 and a message on standard error mean that a file could
-not be read, so a broken file never turns into a quietly wrong page.
+client change log. Each packaging change, of either kind, is put into the row of the code
+version that was current when it went out: the highest code version released at or before the
+time of the packaging change. Several in one row are listed newest first. A version without a
+release in the JSON file counts as released at the start of the date in its heading, but never
+before the next lower version of the same repository went out (and then one second after it).
+Exit status 1 and a message on standard error mean that a file could not be read, so a broken
+file never turns into a quietly wrong page.
 """
 
 import datetime
@@ -44,11 +53,31 @@ VERSION_LIKE = re.compile(r"^##\s*(\[|v?\d)")
 UNRELEASED = re.compile(r"^##\s+Unreleased\b", re.IGNORECASE)
 CODE = re.compile(r"`([^`]+)`")
 TAG = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+NUMBER_TAG = re.compile(r"^[1-9][0-9]*$")
+# The two kinds of line in the notes of a packages release that are not a change.
+RELEASE_LINE = re.compile(r"^Release of \S+ \S+\.$")
+CUT_LINE = re.compile(r"^<!-- cut: .* -->$")
 TIME = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class ChangeLogError(Exception):
     pass
+
+
+def add_entry_line(entries, line, where):
+    """Return the entries read so far plus one more line of a change log or of release notes.
+
+    A line starting with "- " opens an entry, a line starting with two spaces continues the
+    entry before it, and a blank line changes nothing. Any other line is refused, so a typo
+    never makes an entry vanish from the page.
+    """
+    if not line.strip():
+        return entries
+    if line.startswith("- "):
+        return entries + [line[2:].strip()]
+    if line.startswith("  ") and entries:
+        return entries[:-1] + [entries[-1] + " " + line.strip()]
+    raise ChangeLogError(f"{where}: a line that is neither a bullet ('- ') nor its continuation (two spaces): {line}")
 
 
 def parse(path):
@@ -59,7 +88,7 @@ def parse(path):
         raise ChangeLogError(f"{path}: cannot read the file: {err}")
 
     versions = {}
-    current = None  # the bullet list of the version being read, None outside a version
+    current = None  # the version being read, None outside a version
     for number, line in enumerate(lines, 1):
         where = f"{path}:{number}"
         if line.startswith("## "):
@@ -73,8 +102,8 @@ def parse(path):
                     raise ChangeLogError(f"{where}: the date {date} does not exist: {line}")
                 if key in versions:
                     raise ChangeLogError(f"{where}: this version is listed twice: {line}")
-                current = []
-                versions[key] = (date, current)
+                current = key
+                versions[key] = (date, [])
             elif VERSION_LIKE.match(line):
                 raise ChangeLogError(
                     f"{where}: looks like a version heading but is not "
@@ -84,22 +113,20 @@ def parse(path):
                 # "## Unreleased" and any other heading: its bullets are not part of a release.
                 current = None
             continue
-        if current is None or not line.strip():
-            continue
-        if line.startswith("- "):
-            current.append(line[2:].strip())
-        elif line.startswith("  ") and current:
-            current[-1] += " " + line.strip()
-        else:
-            raise ChangeLogError(f"{where}: a line that is neither a bullet ('- ') nor its continuation (two spaces): {line}")
+        if current is not None:
+            date, bullets = versions[current]
+            versions[current] = (date, add_entry_line(bullets, line, where))
 
     if not versions:
         raise ChangeLogError(f"{path}: no version heading '## [X.Y.Z] - YYYY-MM-DD' found")
     return versions
 
 
-def parse_releases(path):
-    """Return {(major, minor, patch): publish time} from the GitHub answer for one repository."""
+def load_releases(path):
+    """Return [(where, release)] for the GitHub answer for one repository, each a checked dict.
+
+    "where" names the release in an error message.
+    """
     try:
         text = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as err:
@@ -111,30 +138,79 @@ def parse_releases(path):
     if not isinstance(data, list):
         raise ChangeLogError(f"{path}: expected a list of releases, found {type(data).__name__}")
 
-    times = {}
+    releases = []
     for number, release in enumerate(data, 1):
         where = f"{path}: release {number}"
         if not isinstance(release, dict) or not isinstance(release.get("tag_name"), str):
             raise ChangeLogError(f"{where}: no tag_name, this is not a list of GitHub releases")
+        releases.append((where, release))
+    return releases
+
+
+def published_time(where, release):
+    """Return the time a release went out, or None for a draft, which has not gone out yet."""
+    published = release.get("published_at")
+    if published is None:
+        return None
+    try:
+        moment = datetime.datetime.strptime(published, TIME)
+    except (TypeError, ValueError):
+        raise ChangeLogError(
+            f"{where}: published_at {published!r} is not a time like 2026-11-13T20:09:24Z"
+        )
+    return moment.replace(tzinfo=datetime.timezone.utc)
+
+
+def parse_releases(path):
+    """Return {(major, minor, patch): publish time} from the GitHub answer for one repository."""
+    times = {}
+    for where, release in load_releases(path):
         match = TAG.match(release["tag_name"])
         if not match:
             # A tag that is not a version number has no entry in any change log.
             continue
-        published = release.get("published_at")
-        if published is None:
-            # A draft has not gone out yet.
+        moment = published_time(where, release)
+        if moment is None:
             continue
-        try:
-            moment = datetime.datetime.strptime(published, TIME)
-        except (TypeError, ValueError):
-            raise ChangeLogError(
-                f"{where}: published_at {published!r} is not a time like 2026-11-13T20:09:24Z"
-            )
         key = tuple(int(part) for part in match.groups())
         if key in times:
             raise ChangeLogError(f"{where}: the release {release['tag_name']} is listed twice")
-        times[key] = moment.replace(tzinfo=datetime.timezone.utc)
+        times[key] = moment
     return times
+
+
+def parse_release_notes(where, body):
+    """Return the change entries in the notes of a packages release, a list of text.
+
+    The lines "Release of <program> <tag>." and the cut comment are not changes of the
+    packaging, so they are left out.
+    """
+    if body is None:
+        return []
+    if not isinstance(body, str):
+        raise ChangeLogError(f"{where}: body is not text: {body!r}")
+    entries = []
+    for number, line in enumerate(body.splitlines(), 1):
+        if not CUT_LINE.match(line.strip()):
+            entries = add_entry_line(entries, line, f"{where}, notes line {number}")
+    return [entry for entry in entries if not RELEASE_LINE.match(entry)]
+
+
+def parse_number_releases(path):
+    """Return [(publish time, number, [entry, ...])], lowest number first, for the releases of
+    the packages repository whose tag is a plain positive integer and that changed something."""
+    found = []
+    for where, release in load_releases(path):
+        tag = release["tag_name"]
+        if not NUMBER_TAG.match(tag):
+            continue
+        moment = published_time(where, release)
+        if moment is None:
+            continue
+        entries = parse_release_notes(where, release.get("body"))
+        if entries:
+            found.append((moment, int(tag), entries))
+    return sorted(found, key=lambda release: release[1])
 
 
 def version_times(log, released):
@@ -159,18 +235,30 @@ def version_times(log, released):
     return times
 
 
-def place_packages(log, times, code_releases, lowest):
-    """Return {code version: [(date, bullets), ...]} for the packaging changes, oldest first.
+def history_changes(log, times):
+    """Return the packaging changes of the change log file as [(time, date, bullets)].
 
     The date is the one in the change log heading, so the page agrees with the change log file.
     """
-    changes = sorted((times[key], key, date, bullets) for key, (date, bullets) in log.items())
+    return [(times[key], log[key][0], log[key][1]) for key in sorted(log)]
+
+
+def release_changes(number_releases):
+    """Return the packaging changes of the number releases as [(time, date, entries)]."""
+    return [(moment, moment.date().isoformat(), entries) for moment, _number, entries in number_releases]
+
+
+def place_packages(changes, code_releases, lowest):
+    """Return {code version: [(date, bullets), ...]} for [(time, date, bullets)], newest first.
+
+    Of two changes at the same time, the one given last counts as the newer one.
+    """
     placed = {}
-    for moment, _key, date, bullets in changes:
+    for moment, date, bullets in sorted(changes, key=lambda change: change[0]):
         current = [code for when, code in code_releases if when <= moment]
         row = max(current) if current else lowest
         placed.setdefault(row, []).append((date, bullets))
-    return placed
+    return {row: entries[::-1] for row, entries in placed.items()}
 
 
 def ascii_only(text):
@@ -222,9 +310,9 @@ def build(log_paths, release_paths):
         for log, released in ((server, server_released), (client, client_released))
         for key, when in version_times(log, released).items()
     ]
-    placed = place_packages(
-        packages, version_times(packages, packages_released), code_releases, keys[-1]
-    )
+    history = history_changes(packages, version_times(packages, packages_released))
+    releases = release_changes(parse_number_releases(release_paths[2]))
+    placed = place_packages(history + releases, code_releases, keys[-1])
     rows = [
         render_row(
             key,

@@ -12,7 +12,12 @@ tracked-files:
 changelog:
 	scripts/build-changelog.sh
 
-check: tracked-files changelog
+# The tests of the page builder. They use the files in tests/fixtures and need no network.
+.PHONY: test
+test:
+	python3 -m unittest discover -s tests
+
+check: tracked-files test changelog
 	python3 scripts/check.py
 
 lint:

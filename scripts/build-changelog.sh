@@ -24,6 +24,30 @@ fetch_releases() {
     fi
 }
 
+# fetch_all_releases REPO FILE: every release of the repository, one page of 100 after
+# another until a page comes back short, joined into one JSON list. A repository that tags
+# every merge passes 100 releases soon, and a single page would drop the oldest silently.
+fetch_all_releases() {
+    page=1
+    while :; do
+        fetch_releases "https://api.github.com/repos/SpliceFS/$1/releases?per_page=100&page=$page" \
+            "$2.page$page"
+        count="$(python3 -c 'import json, sys; print(len(json.load(open(sys.argv[1]))))' "$2.page$page")"
+        [ "$count" -lt 100 ] && break
+        page=$((page + 1))
+    done
+    pages=""
+    i=1
+    while [ "$i" -le "$page" ]; do
+        pages="$pages $2.page$i"
+        i=$((i + 1))
+    done
+    # The file names come from mktemp and a counter: no spaces, so the split is safe.
+    # shellcheck disable=SC2086
+    python3 -c 'import json, sys; print(json.dumps([r for f in sys.argv[1:] for r in json.load(open(f))]))' \
+        $pages > "$2"
+}
+
 dir="${CHANGELOG_DIR:-}"
 if [ -z "$dir" ]; then
     dir="$(mktemp -d)"
@@ -31,8 +55,7 @@ if [ -z "$dir" ]; then
     for part in server client packages; do
         curl -fsS --retry 3 -o "$dir/$part.md" \
             "https://raw.githubusercontent.com/SpliceFS/$part/main/CHANGELOG.md"
-        fetch_releases "https://api.github.com/repos/SpliceFS/$part/releases?per_page=100" \
-            "$dir/$part.json"
+        fetch_all_releases "$part" "$dir/$part.json"
     done
 fi
 

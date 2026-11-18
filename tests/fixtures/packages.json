@@ -1,0 +1,11 @@
+[
+  {"tag_name": "5", "published_at": null, "body": "- A draft has not gone out and shows nowhere."},
+  {"tag_name": "4", "published_at": "2026-11-12T09:00:00Z", "body": "- Fourth change.\n- Release of splicefsd v0.3.0.\n<!-- cut: 2026-11-12T08:59:58Z -->"},
+  {"tag_name": "3", "published_at": "2026-11-11T15:00:00Z", "body": "- Third change, which\n  takes two lines.\r\n- Release of splicefs v0.2.0.\r\n\r\n<!-- cut: 2026-11-11T14:59:58Z -->"},
+  {"tag_name": "2", "published_at": "2026-11-10T08:00:00Z", "body": "- Release of splicefsd v0.2.0.\n<!-- cut: 2026-11-10T07:59:58Z -->"},
+  {"tag_name": "1", "published_at": "2026-11-09T12:00:00Z", "body": "- First change.\n- Another first change.\n<!-- cut: 2026-11-09T11:59:58Z -->"},
+  {"tag_name": "01", "published_at": "2026-11-09T11:00:00Z", "body": "- A tag with a leading zero is not a number tag."},
+  {"tag_name": "nightly", "published_at": "2026-11-09T10:00:00Z", "body": "- A tag that is no number shows nowhere."},
+  {"tag_name": "v0.1.1", "published_at": "2026-11-06T10:00:00Z", "body": "- Second history change of the packages."},
+  {"tag_name": "v0.1.0", "published_at": "2026-11-03T10:00:00Z", "body": "- First history change of the packages."}
+]
