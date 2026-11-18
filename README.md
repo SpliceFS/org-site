@@ -16,11 +16,17 @@ site/changelog/index.html       built, not kept here: what each version changed
 
 `make changelog` builds it (`scripts/changelog.py` with the page in `scripts/changelog-page.html`)
 from the `CHANGELOG.md` and the GitHub release list of the server, the client and the packages
-repository. A row is one version of the code; a packaging change is shown in the row of the code
-version that was current when it went out, and the packages version numbers are not shown. To
-build it from local files: `CHANGELOG_DIR=folder make changelog`, with `server.md`, `client.md`,
-`packages.md`, `server.json`, `client.json` and `packages.json` (the answers of
-`GET /repos/SpliceFS/<repo>/releases?per_page=100`) in that folder.
+repository. A row is one version of the code. The packages column has two sources: the old
+versions of the packages `CHANGELOG.md`, and the packages releases whose tag is a plain number
+(1, 2, 3 ...), taken from the notes of each release. From a release's notes only the change
+lines are used; the lines `Release of <program> <tag>.` and the `cut` comment are dropped, and
+a release with no change line left adds nothing. A packaging change is shown in the row of the
+newest server or client version published at or before it, newest change first in a row, and
+the packages version numbers are not shown. To build the page from local files:
+`CHANGELOG_DIR=folder make changelog`, with `server.md`, `client.md`, `packages.md`,
+`server.json`, `client.json` and `packages.json` (the answers of
+`GET /repos/SpliceFS/<repo>/releases?per_page=100`) in that folder; `tests/fixtures` is an
+example. `make test` runs the tests of the builder, with no network.
 
 ## Changing a page
 
