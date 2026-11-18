@@ -2,6 +2,9 @@ name: CI
 
 on:
   pull_request:
+  # The merge queue waits for the check below on every group.
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
