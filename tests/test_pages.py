@@ -9,6 +9,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 PAGES = sorted(ROOT.glob("site/**/*.html")) + [ROOT / "scripts" / "changelog-page.html"]
 LOGO = re.compile(r'<a class="mark" href="/">')
 INSTALL_PAGE = ROOT / "site" / "install" / "index.html"
+NAV_INSTALL = re.compile(r'<nav class="nav"[^>]*>.*?<a href="([^"]*)"[^>]*>Install</a>', re.DOTALL)
 STEP = re.compile(r'<section class="one" id="(\w+)">(.*?)</section>', re.DOTALL)
 
 
@@ -20,6 +21,13 @@ class TestPages(unittest.TestCase):
         for page in PAGES:
             with self.subTest(page=str(page.relative_to(ROOT))):
                 self.assertRegex(page.read_text(encoding="utf-8"), LOGO)
+
+    def test_the_install_link_of_the_menu_leads_to_the_install_page(self):
+        for page in PAGES:
+            with self.subTest(page=str(page.relative_to(ROOT))):
+                found = NAV_INSTALL.search(page.read_text(encoding="utf-8"))
+                self.assertIsNotNone(found)
+                self.assertEqual(found.group(1), "/install/")
 
 
 class TestInstallPage(unittest.TestCase):

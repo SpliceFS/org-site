@@ -1,7 +1,8 @@
 # splicefs.org
 
 The website of the SpliceFS project, https://splicefs.org: the home page, how it works, the
-[comparison](https://splicefs.org/compare/) with other file systems, and the change log.
+[comparison](https://splicefs.org/compare/) with other file systems, the
+[install page](https://splicefs.org/install/), and the change log.
 
 The pages are plain HTML files in `site/`. There is no framework, and one page is built:
 
@@ -9,6 +10,7 @@ The pages are plain HTML files in `site/`. There is no framework, and one page i
 site/index.html                 the home page: what SpliceFS is and who it is for
 site/how-it-works/index.html    one file from the servers to the reader, in pictures
 site/compare/index.html         how SpliceFS compares, and where it is headed
+site/install/index.html         the commands to install it, by system
 site/changelog/index.html       built, not kept here: what each version changed
 ```
 
