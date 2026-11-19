@@ -1,4 +1,5 @@
 name: Publish
+# Every job has a time limit: 3 times its longest run, so a hang fails in minutes.
 
 # Every change of main is checked and then published to https://splicefs.org.
 on:
@@ -22,6 +23,7 @@ jobs:
   publish:
     name: Check and publish
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
