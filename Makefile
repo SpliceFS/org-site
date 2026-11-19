@@ -5,6 +5,12 @@
 tracked-files:
 	scripts/tracked-files.sh
 
+# Every job of a workflow that runs on a runner has a time limit, so a hang fails in minutes
+# and does not run for GitHub's default of 6 hours.
+.PHONY: workflow-timeouts
+workflow-timeouts:
+	scripts/workflow-timeout-test.sh
+
 # The finished pages: the pages of site/ with their part markers replaced by the files of
 # parts/. Everything that is checked or published is in build/, never in site/.
 .PHONY: build
@@ -24,7 +30,7 @@ changelog: build
 test:
 	python3 -m unittest discover -s tests
 
-check: tracked-files test build changelog
+check: tracked-files workflow-timeouts test build changelog
 	python3 scripts/check.py
 
 lint:
