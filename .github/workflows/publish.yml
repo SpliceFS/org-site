@@ -58,6 +58,7 @@ jobs:
           for attempt in 1 2 3 4 5; do
             have="$(curl -fsS https://splicefs.org/ | sha256sum | cut -d ' ' -f 1)" || have=""
             [ "$have" = "$want" ] && { echo "live home page matches"; exit 0; }
+            echo "try $attempt of 5: the live home page is not this commit yet"
             sleep 5
           done
           echo "::error::the live home page differs from build/index.html"
