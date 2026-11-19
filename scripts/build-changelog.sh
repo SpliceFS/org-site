@@ -61,8 +61,6 @@ fi
 
 mkdir -p site/changelog
 # Written under another name first: a build that fails must not leave half a page behind.
-scripts/changelog.py "$dir/server.md" "$dir/client.md" "$dir/packages.md" \
-    "$dir/server.json" "$dir/client.json" "$dir/packages.json" \
-    > site/changelog/index.html.new
+scripts/changelog.py "$dir" > site/changelog/index.html.new
 mv site/changelog/index.html.new site/changelog/index.html
 echo "change log page: built"
