@@ -3,11 +3,13 @@
 
 Run by `make test`. They need no network: the change logs and the release lists are the files
 in tests/fixtures, which have the shape of the real ones (see the module text of changelog.py).
+The script reads them from one folder, so the tests hand it that folder.
 """
 
 import datetime
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,12 +23,17 @@ FIXTURES = ROOT / "tests" / "fixtures"
 sys.path.insert(0, str(SCRIPT.parent))
 import changelog  # noqa: E402  (the path above must be set first)
 
-LOGS = [FIXTURES / f"{part}.md" for part in ("server", "client", "packages")]
-RELEASES = [FIXTURES / f"{part}.json" for part in ("server", "client", "packages")]
 
 
 def build_page():
-    return changelog.build(LOGS, RELEASES)
+    return changelog.build(FIXTURES)
+
+
+def copy_fixtures(folder, leave_out=()):
+    """Copy the fixtures into folder (a string), except the files named in leave_out."""
+    for source in FIXTURES.iterdir():
+        if source.name not in leave_out:
+            shutil.copy(source, Path(folder) / source.name)
 
 
 def table_body(page):
@@ -109,7 +116,7 @@ class ReleaseNotesTest(unittest.TestCase):
 
 class NumberReleasesTest(unittest.TestCase):
     def test_takes_the_releases_with_a_number_tag_and_entries_oldest_first(self):
-        got = changelog.parse_number_releases(FIXTURES / "packages.json")
+        got = changelog.parse_number_releases(FIXTURES, "packages.json")
         self.assertEqual(
             got,
             [
@@ -120,15 +127,14 @@ class NumberReleasesTest(unittest.TestCase):
         )
 
     def test_a_release_list_without_a_number_tag_gives_nothing(self):
-        self.assertEqual(changelog.parse_number_releases(FIXTURES / "server.json"), [])
+        self.assertEqual(changelog.parse_number_releases(FIXTURES, "server.json"), [])
 
     def test_a_bad_publish_time_is_refused(self):
         bad = [{"tag_name": "3", "published_at": "yesterday", "body": "- A change."}]
         with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / "packages.json"
-            path.write_text(json.dumps(bad), encoding="utf-8")
+            (Path(folder) / "packages.json").write_text(json.dumps(bad), encoding="utf-8")
             with self.assertRaisesRegex(changelog.ChangeLogError, "release 1: published_at"):
-                changelog.parse_number_releases(path)
+                changelog.parse_number_releases(folder, "packages.json")
 
 
 class PlacementTest(unittest.TestCase):
@@ -207,25 +213,80 @@ class BuildFromReleasesTest(unittest.TestCase):
         self.assertIn("newest server or client version", intro(self.page))
 
 
-class CommandLineTest(unittest.TestCase):
-    def run_script(self, releases):
-        return subprocess.run(
-            [sys.executable, str(SCRIPT), *map(str, LOGS), *map(str, releases)],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+def run_script(*arguments):
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), *map(str, arguments)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
-    def test_prints_the_page(self):
-        result = self.run_script(RELEASES)
+
+class CommandLineTest(unittest.TestCase):
+    def test_prints_the_page_for_the_folder(self):
+        result = run_script(FIXTURES)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, build_page())
 
     def test_a_file_that_cannot_be_read_stops_the_build(self):
-        result = self.run_script([RELEASES[0], RELEASES[1], FIXTURES / "missing.json"])
+        with tempfile.TemporaryDirectory() as folder:
+            copy_fixtures(folder, leave_out=("packages.json",))
+            result = run_script(folder)
         self.assertEqual(result.returncode, 1)
         self.assertIn("cannot read the file", result.stderr)
         self.assertEqual(result.stdout, "")
+
+    def test_one_argument_is_needed(self):
+        for arguments in ((), (FIXTURES, FIXTURES)):
+            with self.subTest(arguments=arguments):
+                result = run_script(*arguments)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("usage: changelog.py FOLDER", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+
+class InputFolderTest(unittest.TestCase):
+    """Only the files of the input folder are read, never a path that leaves it."""
+
+    def test_reads_a_file_of_the_folder(self):
+        text = changelog.read_input(FIXTURES, "server.md")
+        self.assertEqual(text, (FIXTURES / "server.md").read_text(encoding="utf-8"))
+
+    def test_a_name_that_leaves_the_folder_is_refused(self):
+        for name in ("../test_changelog.py", "/etc/hosts", "sub/../../test_changelog.py"):
+            with self.subTest(name):
+                with self.assertRaisesRegex(changelog.ChangeLogError, "outside the input folder"):
+                    changelog.read_input(FIXTURES, name)
+
+    def test_a_link_that_points_out_of_the_folder_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder, tempfile.TemporaryDirectory() as elsewhere:
+            copy_fixtures(folder, leave_out=("server.md",))
+            secret = Path(elsewhere) / "secret.md"
+            secret.write_text("## [9.9.9] - 2026-11-01\n\n- Not for the page.\n", encoding="utf-8")
+            (Path(folder) / "server.md").symlink_to(secret)
+            with self.assertRaisesRegex(changelog.ChangeLogError, "outside the input folder"):
+                changelog.parse(folder, "server.md")
+            result = run_script(folder)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("outside the input folder", result.stderr)
+        self.assertEqual(result.stdout, "")
+
+    def test_a_link_inside_the_folder_is_read(self):
+        with tempfile.TemporaryDirectory() as folder:
+            copy_fixtures(folder, leave_out=("client.md",))
+            (Path(folder) / "client.md").symlink_to(Path(folder) / "server.md")
+            self.assertIn((0, 3, 0), changelog.parse(folder, "client.md"))
+
+    def test_a_folder_that_is_given_as_a_relative_path_is_read(self):
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "fixtures"],
+            cwd=FIXTURES.parent,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, build_page())
 
 
 if __name__ == "__main__":

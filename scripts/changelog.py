@@ -2,8 +2,12 @@
 """Build the change log page of splicefs.org from the three CHANGELOG.md files and the releases.
 
 Usage:
-    scripts/changelog.py SERVER.md CLIENT.md PACKAGES.md SERVER.json CLIENT.json PACKAGES.json
-        > site/changelog/index.html
+    scripts/changelog.py FOLDER > site/changelog/index.html
+
+The folder holds the six files server.md, client.md, packages.md, server.json, client.json and
+packages.json. Only these names are read, and a name that would end up outside the folder (a
+link that points out of it, for example) is refused, so no path from the command line is ever
+opened as given.
 
 Each change log has one heading per version:
 
@@ -45,6 +49,9 @@ from pathlib import Path
 TEMPLATE = Path(__file__).resolve().with_name("changelog-page.html")
 MARKER = "<!-- ROWS -->"
 PARTS = ("Server", "Client", "Packages")
+# The names of the input files in the input folder, one change log and one release list per part.
+LOG_NAMES = tuple(f"{part.lower()}.md" for part in PARTS)
+RELEASE_NAMES = tuple(f"{part.lower()}.json" for part in PARTS)
 
 HEADING = re.compile(r"^## \[(\d+)\.(\d+)\.(\d+)\] - (\d{4}-\d{2}-\d{2})\s*$")
 # Anything that is meant to be a version heading. If one of these does not match HEADING,
@@ -80,17 +87,30 @@ def add_entry_line(entries, line, where):
     raise ChangeLogError(f"{where}: a line that is neither a bullet ('- ') nor its continuation (two spaces): {line}")
 
 
-def parse(path):
-    """Return {(major, minor, patch): (date, [bullet, ...])} for one change log file."""
+def read_input(folder, name):
+    """Return the text of the file called name in the input folder.
+
+    The path is the folder plus the name, resolved so that links are followed, and it is refused
+    when it ends up outside the folder. This is the only place that opens an input file.
+    """
+    root = Path(folder).resolve()
+    path = (root / name).resolve()
+    if not path.is_relative_to(root):
+        raise ChangeLogError(f"{name}: outside the input folder {folder}, refused")
     try:
-        lines = Path(path).read_text(encoding="utf-8").splitlines()
+        return path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as err:
         raise ChangeLogError(f"{path}: cannot read the file: {err}")
+
+
+def parse(folder, name):
+    """Return {(major, minor, patch): (date, [bullet, ...])} for one change log file."""
+    lines = read_input(folder, name).splitlines()
 
     versions = {}
     current = None  # the version being read, None outside a version
     for number, line in enumerate(lines, 1):
-        where = f"{path}:{number}"
+        where = f"{name}:{number}"
         if line.startswith("## "):
             match = HEADING.match(line)
             if match:
@@ -118,29 +138,26 @@ def parse(path):
             versions[current] = (date, add_entry_line(bullets, line, where))
 
     if not versions:
-        raise ChangeLogError(f"{path}: no version heading '## [X.Y.Z] - YYYY-MM-DD' found")
+        raise ChangeLogError(f"{name}: no version heading '## [X.Y.Z] - YYYY-MM-DD' found")
     return versions
 
 
-def load_releases(path):
+def load_releases(folder, name):
     """Return [(where, release)] for the GitHub answer for one repository, each a checked dict.
 
     "where" names the release in an error message.
     """
-    try:
-        text = Path(path).read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as err:
-        raise ChangeLogError(f"{path}: cannot read the file: {err}")
+    text = read_input(folder, name)
     try:
         data = json.loads(text)
     except ValueError as err:
-        raise ChangeLogError(f"{path}: not valid JSON: {err}")
+        raise ChangeLogError(f"{name}: not valid JSON: {err}")
     if not isinstance(data, list):
-        raise ChangeLogError(f"{path}: expected a list of releases, found {type(data).__name__}")
+        raise ChangeLogError(f"{name}: expected a list of releases, found {type(data).__name__}")
 
     releases = []
     for number, release in enumerate(data, 1):
-        where = f"{path}: release {number}"
+        where = f"{name}: release {number}"
         if not isinstance(release, dict) or not isinstance(release.get("tag_name"), str):
             raise ChangeLogError(f"{where}: no tag_name, this is not a list of GitHub releases")
         releases.append((where, release))
@@ -161,10 +178,10 @@ def published_time(where, release):
     return moment.replace(tzinfo=datetime.timezone.utc)
 
 
-def parse_releases(path):
+def parse_releases(folder, name):
     """Return {(major, minor, patch): publish time} from the GitHub answer for one repository."""
     times = {}
-    for where, release in load_releases(path):
+    for where, release in load_releases(folder, name):
         match = TAG.match(release["tag_name"])
         if not match:
             # A tag that is not a version number has no entry in any change log.
@@ -196,11 +213,11 @@ def parse_release_notes(where, body):
     return [entry for entry in entries if not RELEASE_LINE.match(entry)]
 
 
-def parse_number_releases(path):
+def parse_number_releases(folder, name):
     """Return [(publish time, number, [entry, ...])], lowest number first, for the releases of
     the packages repository whose tag is a plain positive integer and that changed something."""
     found = []
-    for where, release in load_releases(path):
+    for where, release in load_releases(folder, name):
         tag = release["tag_name"]
         if not NUMBER_TAG.match(tag):
             continue
@@ -298,10 +315,10 @@ def render_row(key, cells):
     return "\n".join(out)
 
 
-def build(log_paths, release_paths):
-    server, client, packages = [parse(path) for path in log_paths]
+def build(folder):
+    server, client, packages = [parse(folder, name) for name in LOG_NAMES]
     server_released, client_released, packages_released = [
-        parse_releases(path) for path in release_paths
+        parse_releases(folder, name) for name in RELEASE_NAMES
     ]
     # Sorted as numbers, so 0.10.0 comes before 0.9.0. Only the code makes rows.
     keys = sorted(set(server) | set(client), reverse=True)
@@ -311,7 +328,7 @@ def build(log_paths, release_paths):
         for key, when in version_times(log, released).items()
     ]
     history = history_changes(packages, version_times(packages, packages_released))
-    releases = release_changes(parse_number_releases(release_paths[2]))
+    releases = release_changes(parse_number_releases(folder, RELEASE_NAMES[-1]))
     placed = place_packages(history + releases, code_releases, keys[-1])
     rows = [
         render_row(
@@ -337,14 +354,11 @@ def build(log_paths, release_paths):
 
 
 def main(argv):
-    if len(argv) != 7:
-        sys.stderr.write(
-            "usage: changelog.py SERVER.md CLIENT.md PACKAGES.md "
-            "SERVER.json CLIENT.json PACKAGES.json > index.html\n"
-        )
+    if len(argv) != 2:
+        sys.stderr.write("usage: changelog.py FOLDER > index.html\n")
         return 2
     try:
-        page = build(argv[1:4], argv[4:7])
+        page = build(argv[1])
     except ChangeLogError as err:
         sys.stderr.write(f"changelog.py: {err}\n")
         return 1
