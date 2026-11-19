@@ -176,6 +176,3 @@ cover.html
 __pycache__/
 *.pyc
 node_modules/
-
-# Built by scripts/build-changelog.sh from the change logs of the other repositories.
-/site/changelog/

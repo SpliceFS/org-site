@@ -1,14 +1,35 @@
-"""Rules every page of the site keeps."""
+"""Rules every page of the site keeps, checked on the finished pages.
 
+The pages are built into a temporary folder first, the way make build does it, so what is
+checked is what a visitor gets. The change log page is built from the files in tests/fixtures.
+"""
+
+import atexit
 import pathlib
 import re
+import shutil
+import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# The pages in the site folder, and the template the change log page is built from.
-PAGES = sorted(ROOT.glob("site/**/*.html")) + [ROOT / "scripts" / "changelog-page.html"]
+sys.path.insert(0, str(ROOT / "scripts"))
+import changelog  # noqa: E402  (the path above must be set first)
+import pages  # noqa: E402
+
+BUILT = pathlib.Path(tempfile.mkdtemp())
+atexit.register(shutil.rmtree, BUILT, ignore_errors=True)
+pages.build(pages.SITE, pages.PARTS, BUILT)
+(BUILT / "changelog").mkdir()
+(BUILT / "changelog" / "index.html").write_text(
+    changelog.build(ROOT / "tests" / "fixtures"), encoding="utf-8"
+)
+# The built pages, and the sources they come from: the pages of the site folder and the
+# template of the change log page.
+PAGES = sorted(BUILT.glob("**/*.html"))
+SOURCES = sorted(pages.SITE.glob("**/*.html")) + [ROOT / "scripts" / "changelog-page.html"]
 LOGO = re.compile(r'<a class="mark" href="/">')
-INSTALL_PAGE = ROOT / "site" / "install" / "index.html"
+INSTALL_PAGE = BUILT / "install" / "index.html"
 NAV_INSTALL = re.compile(r'<nav class="nav"[^>]*>.*?<a href="([^"]*)"[^>]*>Install</a>', re.DOTALL)
 # One section per operating system, each with its own steps; the page has one chooser.
 SYSTEM = re.compile(r'<section class="os" id="(\w+)" data-os="\1">(.*?)<!-- end \1 -->', re.DOTALL)
@@ -23,15 +44,44 @@ class TestPages(unittest.TestCase):
 
     def test_the_logo_leads_to_the_home_page(self):
         for page in PAGES:
-            with self.subTest(page=str(page.relative_to(ROOT))):
+            with self.subTest(page=str(page.relative_to(BUILT))):
                 self.assertRegex(page.read_text(encoding="utf-8"), LOGO)
 
     def test_the_install_link_of_the_menu_leads_to_the_install_page(self):
         for page in PAGES:
-            with self.subTest(page=str(page.relative_to(ROOT))):
+            with self.subTest(page=str(page.relative_to(BUILT))):
                 found = NAV_INSTALL.search(page.read_text(encoding="utf-8"))
                 self.assertIsNotNone(found)
                 self.assertEqual(found.group(1), "/install/")
+
+
+    def test_no_marker_is_left_in_a_built_page(self):
+        for page in PAGES:
+            with self.subTest(page=str(page.relative_to(BUILT))):
+                self.assertNotRegex(page.read_text(encoding="utf-8"), r"<!-- (part|fill|end fill)\b")
+
+    def test_every_page_has_the_menu_and_the_footer(self):
+        for page in PAGES:
+            with self.subTest(page=str(page.relative_to(BUILT))):
+                text = page.read_text(encoding="utf-8")
+                self.assertEqual(text.count('<nav class="nav"'), 1)
+                self.assertIn("SpliceFS is open source under the MIT license.", text)
+
+    def test_the_current_page_is_the_only_one_marked_in_the_menu(self):
+        for page in PAGES:
+            with self.subTest(page=str(page.relative_to(BUILT))):
+                text = page.read_text(encoding="utf-8")
+                marked = re.findall(r'<a href="([^"]*)" aria-current="page">', text)
+                expected = "/" + page.parent.relative_to(BUILT).as_posix() + "/"
+                self.assertEqual(marked, [] if expected == "/./" else [expected])
+
+    def test_the_menu_is_written_in_one_place(self):
+        # A source page that holds its own menu has a copy that a change of the menu misses.
+        for page in SOURCES:
+            with self.subTest(page=str(page.relative_to(ROOT))):
+                text = page.read_text(encoding="utf-8")
+                self.assertNotIn('<nav class="nav"', text)
+                self.assertNotIn('<header class="top">', text)
 
 
 class TestInstallPage(unittest.TestCase):
@@ -69,7 +119,7 @@ if __name__ == "__main__":
     unittest.main()
 
 
-COMPARE_PAGE = ROOT / "site" / "compare" / "index.html"
+COMPARE_PAGE = BUILT / "compare" / "index.html"
 ROW = re.compile(r'<tr><th scope="row">([^<]+)</th>(.*?)</tr>', re.DOTALL)
 
 

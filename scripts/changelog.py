@@ -27,8 +27,9 @@ HTML comment "<!-- cut: <time> -->". The release lines are left out, because the
 the programs show those releases, and so is the comment. A release with no change line left
 adds nothing: the packages column shows a change only when the packaging changed.
 
-The page is the template scripts/changelog-page.html with the marker <!-- ROWS --> replaced
-by one table row per version of the code, that is per version found in the server or the
+The page is the template scripts/changelog-page.html with its part markers expanded, the same
+way pages.py expands the other pages (the head, the menu and the footer are the files in
+parts/), and the marker <!-- ROWS --> replaced by one table row per version of the code, that is per version found in the server or the
 client change log. Each packaging change, of either kind, is put into the row of the code
 version that was current when it went out: the highest code version released at or before the
 time of the packaging change. Several in one row are listed newest first. A version without a
@@ -45,6 +46,8 @@ import re
 import sys
 import textwrap
 from pathlib import Path
+
+import pages
 
 TEMPLATE = Path(__file__).resolve().with_name("changelog-page.html")
 MARKER = "<!-- ROWS -->"
@@ -348,6 +351,10 @@ def build(folder):
         template = TEMPLATE.read_text(encoding="utf-8")
     except OSError as err:
         raise ChangeLogError(f"{TEMPLATE}: cannot read the template: {err}")
+    try:
+        template = pages.expand(template, pages.PARTS, TEMPLATE.name)
+    except pages.PartError as err:
+        raise ChangeLogError(str(err))
     if template.count(MARKER) != 1:
         raise ChangeLogError(f"{TEMPLATE}: the marker {MARKER} must occur exactly once")
     return ascii_only(template.replace(MARKER, "\n".join(rows).lstrip()))

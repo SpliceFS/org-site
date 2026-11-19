@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks the pages before they are published.
+"""Checks the finished pages in build/ before they are published.
 
 Every HTML file must be plain ASCII, have balanced tags, and link only to pages that exist.
 A page that fails here would be published broken, so the publish job runs this first.
@@ -8,7 +8,7 @@ import pathlib
 import sys
 from html.parser import HTMLParser
 
-SITE = pathlib.Path(__file__).resolve().parent.parent / "site"
+SITE = pathlib.Path(__file__).resolve().parent.parent / "build"
 # Elements that have no closing tag.
 VOID = {"meta", "link", "img", "br", "hr", "input", "col", "circle", "path", "use"}
 
@@ -74,7 +74,7 @@ def check(file):
 def main():
     pages = sorted(SITE.rglob("*.html"))
     if not (SITE / "index.html").is_file():
-        print("FAIL site/index.html is missing")
+        print("FAIL build/index.html is missing")
         return 1
     failed = 0
     for file in pages:

@@ -1,49 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- part: head -->
 <title>Change log - SpliceFS</title>
 <meta name="description" content="What went out with each version of the SpliceFS server, the client and the packages, newest version first.">
 <style>
-:root {
-  --bg: #ffffff;
-  --fg: #1f2328;
-  --muted: #59636e;
-  --border: #d1d9e0;
-  --accent: #0b6b85;
-  --hover-bg: #f6f8fa;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1117;
-    --fg: #e6edf3;
-    --muted: #9198a1;
-    --border: #30363d;
-    --accent: #4fc3dc;
-    --hover-bg: #161b22;
-  }
-}
-* { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-a { color: var(--accent); }
-a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
-header.top { border-bottom: 1px solid var(--border); }
-header.top .wrap { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; padding-top: 16px; padding-bottom: 16px; }
-.mark { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; color: inherit; }
-.nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
-.nav a { font-size: 14px; text-decoration: none; }
-.nav a:hover { text-decoration: underline; }
-.nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
-main { padding: 48px 0 24px; }
-h1 { font-size: 32px; line-height: 1.2; margin: 0 0 16px; letter-spacing: -0.02em; }
+<!-- part: style-base wrap=1120px -->
 h2 { font-size: 22px; line-height: 1.3; margin: 48px 0 8px; }
 p { margin: 0 0 16px; }
 .lede { font-size: 18px; }
@@ -91,18 +50,7 @@ li.internal { color: var(--muted); }
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="wrap">
-    <a class="mark" href="/">SpliceFS</a>
-    <nav class="nav" aria-label="Site">
-      <a href="/how-it-works/">How it works</a>
-      <a href="/compare/">Compare</a>
-      <a href="/changelog/" aria-current="page">Change log</a>
-      <a href="/install/">Install</a>
-      <a href="https://github.com/SpliceFS">GitHub</a>
-    </nav>
-  </div>
-</header>
+<!-- part: header current=/changelog/ -->
 <main>
   <div class="wrap">
     <h1>Change log</h1>
@@ -132,8 +80,6 @@ li.internal { color: var(--muted); }
     </div>
   </div>
 </main>
-<footer>
-  <div class="wrap">SpliceFS is open source under the MIT license.</div>
-</footer>
+<!-- part: footer -->
 </body>
 </html>
