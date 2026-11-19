@@ -222,6 +222,25 @@ def run_script(*arguments):
     )
 
 
+class TemplatePartsTest(unittest.TestCase):
+    def test_the_page_has_the_shared_menu_and_footer(self):
+        page = build_page()
+        self.assertEqual(page.count('<nav class="nav"'), 1)
+        self.assertIn('<a href="/changelog/" aria-current="page">Change log</a>', page)
+        self.assertIn("SpliceFS is open source under the MIT license.", page)
+
+    def test_a_marker_with_no_part_file_stops_the_build_and_says_which(self):
+        with tempfile.TemporaryDirectory() as folder:
+            template = Path(folder) / "changelog-page.html"
+            template.write_text("<!-- part: missing -->\n<!-- ROWS -->\n", encoding="utf-8")
+            original = changelog.TEMPLATE
+            changelog.TEMPLATE = template
+            self.addCleanup(setattr, changelog, "TEMPLATE", original)
+            with self.assertRaises(changelog.ChangeLogError) as caught:
+                changelog.build(FIXTURES)
+        self.assertIn('the part "missing" has no file', str(caught.exception))
+
+
 class CommandLineTest(unittest.TestCase):
     def test_prints_the_page_for_the_folder(self):
         result = run_script(FIXTURES)

@@ -5,19 +5,26 @@
 tracked-files:
 	scripts/tracked-files.sh
 
+# The finished pages: the pages of site/ with their part markers replaced by the files of
+# parts/. Everything that is checked or published is in build/, never in site/.
+.PHONY: build
+build:
+	python3 scripts/pages.py
+
 # The change log page is not kept in this repository. It is built from the change log
-# files of the server, the client and the packages, and the pages are checked with it in
-# place, because the other pages link to it.
+# files of the server, the client and the packages into build/, and the pages are checked
+# with it in place, because the other pages link to it. It needs build first, which replaces
+# the whole build folder.
 .PHONY: changelog
-changelog:
+changelog: build
 	scripts/build-changelog.sh
 
-# The tests of the page builder. They use the files in tests/fixtures and need no network.
+# The tests of the page builders. They use the files in tests/fixtures and need no network.
 .PHONY: test
 test:
 	python3 -m unittest discover -s tests
 
-check: tracked-files test changelog
+check: tracked-files test build changelog
 	python3 scripts/check.py
 
 lint:

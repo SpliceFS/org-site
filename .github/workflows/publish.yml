@@ -52,13 +52,13 @@ jobs:
       # The page a visitor gets must be the page in this commit.
       - name: Compare the live home page with this commit
         run: |
-          want="$(sha256sum site/index.html | cut -d ' ' -f 1)"
+          want="$(sha256sum build/index.html | cut -d ' ' -f 1)"
           for attempt in 1 2 3 4 5; do
             have="$(curl -fsS https://splicefs.org/ | sha256sum | cut -d ' ' -f 1)" || have=""
             [ "$have" = "$want" ] && { echo "live home page matches"; exit 0; }
             sleep 5
           done
-          echo "::error::the live home page differs from site/index.html"
+          echo "::error::the live home page differs from build/index.html"
           exit 1
 
   # A failed run of this workflow opens an issue assigned to the account in the repository

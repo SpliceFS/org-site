@@ -1,5 +1,5 @@
 #!/bin/sh
-# Publishes the folder site/ to splicefs.org by rsync over ssh.
+# Publishes the folder build/ (the finished pages, made by make build) to splicefs.org by rsync over ssh.
 #
 # The upload key can read and write the folder of this one website and do nothing else.
 # Variables: UPLOAD_KEY_FILE (required, private key, mode 600), UPLOAD_KNOWN_HOSTS_FILE
@@ -13,12 +13,12 @@ host=${UPLOAD_HOST:-splicefs.org}
 port=${UPLOAD_PORT:-7022}
 user=${UPLOAD_USER:-site-splicefs}
 
-[ -f "$root/site/index.html" ] || { echo "site/index.html is missing" >&2; exit 1; }
+[ -f "$root/build/index.html" ] || { echo "build/index.html is missing (run make build)" >&2; exit 1; }
 
 # Old files are removed only after the new ones are in place, so a visitor never gets a
 # half-published site. The modes make every file readable by the web server.
 if [ -n "${UPLOAD_TARGET:-}" ]; then
-    rsync -a --delete-after --chmod=D755,F644 "$root/site/" "$UPLOAD_TARGET"
+    rsync -a --delete-after --chmod=D755,F644 "$root/build/" "$UPLOAD_TARGET"
     exit 0
 fi
 
@@ -33,5 +33,5 @@ ssh_cmd="ssh -p $port -i $UPLOAD_KEY_FILE -o IdentitiesOnly=yes -o IdentityAgent
 ssh_cmd="$ssh_cmd -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$UPLOAD_KNOWN_HOSTS_FILE"
 ssh_cmd="$ssh_cmd -o BatchMode=yes -F /dev/null"
 
-rsync -a --delete-after --chmod=D755,F644 -e "$ssh_cmd" "$root/site/" "$user@$host:/"
-echo "published site/ to $host"
+rsync -a --delete-after --chmod=D755,F644 -e "$ssh_cmd" "$root/build/" "$user@$host:/"
+echo "published build/ to $host"

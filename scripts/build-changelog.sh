@@ -1,7 +1,7 @@
 #!/bin/sh
-# Builds site/changelog/index.html from the change log files of the server, the client and
+# Builds build/changelog/index.html from the change log files of the server, the client and
 # the packages repository, and from the release lists of the three, so the page always shows
-# what those repositories say.
+# what those repositories say. make build must have run first: it replaces the whole build folder.
 #
 # With CHANGELOG_DIR set, server.md, client.md, packages.md, server.json, client.json and
 # packages.json are taken from that folder (for work without a network). Otherwise the file of
@@ -59,8 +59,8 @@ if [ -z "$dir" ]; then
     done
 fi
 
-mkdir -p site/changelog
+mkdir -p build/changelog
 # Written under another name first: a build that fails must not leave half a page behind.
-scripts/changelog.py "$dir" > site/changelog/index.html.new
-mv site/changelog/index.html.new site/changelog/index.html
+scripts/changelog.py "$dir" > build/changelog/index.html.new
+mv build/changelog/index.html.new build/changelog/index.html
 echo "change log page: built"
