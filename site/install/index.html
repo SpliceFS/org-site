@@ -202,7 +202,7 @@ splicefsctl umount ~/files
         </details>
         <details id="debian-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code># Remove the packages and their configuration files:
+          <div class="block"><div class="bar"><span class="label">Debian</span></div><pre><code># Remove the packages and their configuration files. Leave out the one you did not install:
 sudo apt-get purge splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -332,7 +332,7 @@ splicefsctl umount ~/files
         </details>
         <details id="ubuntu-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code># Remove the packages and their configuration files:
+          <div class="block"><div class="bar"><span class="label">Ubuntu</span></div><pre><code># Remove the packages and their configuration files. Leave out the one you did not install:
 sudo apt-get purge splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -462,7 +462,7 @@ splicefsctl umount ~/files
         </details>
         <details id="rhel-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code># Remove the packages:
+          <div class="block"><div class="bar"><span class="label">Red Hat Enterprise Linux</span></div><pre><code># Remove the packages. Leave out the one you did not install:
 sudo dnf remove splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -601,7 +601,7 @@ splicefsctl umount ~/files
         </details>
         <details id="rocky-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code># Remove the packages:
+          <div class="block"><div class="bar"><span class="label">Rocky Linux</span></div><pre><code># Remove the packages. Leave out the one you did not install:
 sudo dnf remove splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -740,7 +740,7 @@ splicefsctl umount ~/files
         </details>
         <details id="almalinux-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code># Remove the packages:
+          <div class="block"><div class="bar"><span class="label">AlmaLinux</span></div><pre><code># Remove the packages. Leave out the one you did not install:
 sudo dnf remove splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -879,7 +879,7 @@ splicefsctl umount ~/files
         </details>
         <details id="amazon-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code># Remove the packages:
+          <div class="block"><div class="bar"><span class="label">Amazon Linux</span></div><pre><code># Remove the packages. Leave out the one you did not install:
 sudo dnf remove splicefs-server splicefs-client
 
 # Remove the packages they needed that nothing else needs now:
@@ -1018,7 +1018,7 @@ splicefsctl umount ~/files
         </details>
         <details id="opensuse-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now:
+          <div class="block"><div class="bar"><span class="label">openSUSE Leap</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now. Leave out the one you did not install:
 sudo zypper remove --clean-deps splicefs-server splicefs-client
 
 # Delete the data and the configuration folder, then the user and its group:
@@ -1160,7 +1160,7 @@ splicefsctl umount ~/files
         </details>
         <details id="alpine-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now:
+          <div class="block"><div class="bar"><span class="label">Alpine Linux, as root</span></div><pre><code># Remove the packages, and the packages they needed that nothing else needs now. Leave out the one you did not install:
 apk del splicefs-server splicefs-client
 
 # Delete the data, the logs and the configuration folder, then the user and its group:
@@ -1291,7 +1291,7 @@ service splicefs restart     # the client
         </details>
         <details id="freebsd-uninstall">
           <summary>Uninstall completely</summary>
-          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code># Remove the packages:
+          <div class="block"><div class="bar"><span class="label">FreeBSD, as root</span></div><pre><code># Remove the packages. Leave out the one you did not install:
 pkg delete splicefs-server splicefs-client
 
 # Delete the settings of the services from /etc/rc.conf, which removing a package leaves alone:
