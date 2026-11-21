@@ -30,9 +30,10 @@ def build_page():
 
 
 def copy_fixtures(folder, leave_out=()):
-    """Copy the fixtures into folder (a string), except the files named in leave_out."""
+    """Copy the change log fixtures into folder (a string), except the files named in
+    leave_out. The folders of the fixtures belong to other tests."""
     for source in FIXTURES.iterdir():
-        if source.name not in leave_out:
+        if source.is_file() and source.name not in leave_out:
             shutil.copy(source, Path(folder) / source.name)
 
 

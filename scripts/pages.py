@@ -27,6 +27,12 @@ publishes a page with a marker still in it. The source pages are never changed. 
 are expanded; every other file in site/ is copied as it is. The folder build/ is replaced as a
 whole, and only once every page has been built, so a failed build leaves the last one in place.
 The change log page is built by changelog.py, which expands its template with the same parts.
+
+A code block that shows a steps file of the packages repository holds a marker, never the text:
+
+    <pre><code><!-- steps: uninstall-apt --></code></pre>
+
+The marker is replaced by the file, escaped for HTML. steps.py describes where the files come from.
 """
 
 import re
@@ -34,6 +40,8 @@ import shlex
 import shutil
 import sys
 from pathlib import Path
+
+import steps
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
@@ -107,8 +115,9 @@ def render(name, values, fills, parts, where):
     return body.removesuffix("\n")
 
 
-def expand(text, parts, origin):
-    """The text with every part marker replaced. origin names the text in messages."""
+def expand(text, parts, origin, steps_dir=None):
+    """The text with every part marker and steps marker replaced. origin names the text in
+    messages; steps_dir is the folder of the steps files."""
     out = []
     fills = {}
     open_fill = None  # (name, first line number, lines) while a fill is being read
@@ -138,7 +147,10 @@ def expand(text, parts, origin):
         else:
             if fills and line.strip():
                 raise PartError(f"{where}: a fill is written, but no part follows it")
-            out.append(line)
+            try:
+                out.append(steps.fill(line, steps_dir))
+            except steps.StepsError as err:
+                raise PartError(f"{where}: {err}")
     if open_fill is not None:
         raise PartError(f"{origin}:{open_fill[1]}: the fill {open_fill[0]} is never closed")
     if fills:
@@ -146,7 +158,7 @@ def expand(text, parts, origin):
     return "\n".join(out)
 
 
-def build_files(source, parts):
+def build_files(source, parts, steps_dir=None):
     """Every file of the source folder as (path relative to it, bytes), pages expanded."""
     files = []
     for path in sorted(source.rglob("*")):
@@ -155,14 +167,14 @@ def build_files(source, parts):
         relative = path.relative_to(source)
         data = path.read_bytes()
         if path.suffix == ".html":
-            data = expand(data.decode("utf-8"), parts, str(relative)).encode("utf-8")
+            data = expand(data.decode("utf-8"), parts, str(relative), steps_dir).encode("utf-8")
         files.append((relative, data))
     return files
 
 
-def build(source, parts, target):
+def build(source, parts, target, steps_dir=None):
     """Replaces the target folder with the built source folder."""
-    files = build_files(source, parts)
+    files = build_files(source, parts, steps_dir)
     shutil.rmtree(target, ignore_errors=True)
     for relative, data in files:
         file = target / relative
@@ -170,12 +182,12 @@ def build(source, parts, target):
         file.write_bytes(data)
 
 
-def main(argv, source=SITE, parts=PARTS, target=BUILD, errors=sys.stderr):
+def main(argv, source=SITE, parts=PARTS, target=BUILD, errors=sys.stderr, steps_dir=None):
     if argv:
         errors.write("usage: pages.py\n")
         return 2
     try:
-        build(source, parts, target)
+        build(source, parts, target, steps_dir)
     except PartError as err:
         errors.write(f"pages.py: {err}\n")
         return 1
@@ -183,4 +195,4 @@ def main(argv, source=SITE, parts=PARTS, target=BUILD, errors=sys.stderr):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:], steps_dir=steps.folder()))

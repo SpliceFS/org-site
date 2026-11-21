@@ -11,10 +11,17 @@ tracked-files:
 workflow-timeouts:
 	scripts/workflow-timeout-test.sh
 
+# The steps files of the packages repository that the pages show in code blocks, downloaded
+# into .steps/ (or taken from STEPS_DIR, for work without a network).
+.PHONY: steps
+steps:
+	scripts/fetch-steps.sh
+
 # The finished pages: the pages of site/ with their part markers replaced by the files of
-# parts/. Everything that is checked or published is in build/, never in site/.
+# parts/, and their code blocks filled from the steps files. Everything that is checked or
+# published is in build/, never in site/.
 .PHONY: build
-build:
+build: steps
 	python3 scripts/pages.py
 
 # The change log page is not kept in this repository. It is built from the change log
