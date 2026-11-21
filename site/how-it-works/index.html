@@ -326,8 +326,8 @@ figure.diagram figcaption { margin-top: 8px; font-size: 14px; color: var(--muted
         </div>
         <div><strong>Rough edges</strong>
           <ul>
-            <li><strong>Removing a user takes time to bite.</strong> A user who is logged in keeps access until the login expires, 30 minutes by default.</li>
-            <li><strong>A new login needs a moment.</strong> A login made at one server is refused by the others until your sync tool has delivered that server's key file to them.</li>
+            <li><strong>Removing a user takes a moment to bite.</strong> A user who is removed or disabled loses access within 30 seconds, also while logged in.</li>
+            <li><strong>A new login needs a moment.</strong> A login made at one server is refused by the others until your sync tool has delivered that server's node file to them.</li>
             <li><strong>Starting with every server down.</strong> A client that starts while no server can be reached cannot list folders, although the file contents it read before are still in its cache.</li>
           </ul>
         </div>
