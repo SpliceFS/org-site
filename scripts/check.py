@@ -2,13 +2,18 @@
 """Checks the finished pages in build/ before they are published.
 
 Every HTML file must be plain ASCII, have balanced tags, and link only to pages that exist.
+Every code block that its source page fills from a steps file must read exactly that file.
 A page that fails here would be published broken, so the publish job runs this first.
 """
 import pathlib
 import sys
 from html.parser import HTMLParser
 
-SITE = pathlib.Path(__file__).resolve().parent.parent / "build"
+import steps
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SITE = ROOT / "build"
+SOURCE = ROOT / "site"
 # Elements that have no closing tag.
 VOID = {"meta", "link", "img", "br", "hr", "input", "col", "circle", "path", "use"}
 
@@ -53,6 +58,14 @@ def target(link):
     return file / "index.html" if path == "" or path.endswith("/") else file
 
 
+def steps_problems(file, built):
+    """The blocks of the page that do not read their steps files; the source page names them."""
+    source = SOURCE / file.relative_to(SITE)
+    if not source.is_file():
+        return []
+    return steps.problems(source.read_text(encoding="utf-8"), built, steps.folder())
+
+
 def check(file):
     problems = []
     data = file.read_bytes()
@@ -68,6 +81,7 @@ def check(file):
         file_for_link = target(link)
         if file_for_link is not None and not file_for_link.is_file():
             problems.append(f"link {link} leads to nothing")
+    problems += steps_problems(file, data.decode("ascii", "replace"))
     return problems
 
 

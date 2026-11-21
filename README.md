@@ -44,6 +44,23 @@ closed stops the build with a message that names the page and the line. `scripts
 builder (the text at its top is the full description), and the change log page is built with the
 same parts. To change the menu or the footer, change the file in `parts/` and nothing else.
 
+## The steps files
+
+The uninstall commands and the commands of a person who runs the client as themselves are files of
+the packages repository (`steps/*.sh`), because the tests of that repository run those very files.
+The install page never holds their text. A code block holds a marker, and `make build` writes the
+file in, escaped for HTML:
+
+```
+<pre><code><!-- steps: uninstall-apt --></code></pre>
+```
+
+`make steps` (run by `make build`) downloads the files the pages name into `.steps/`, from the
+`main` branch of the packages repository, the same version the change log page is built from.
+With `STEPS_DIR=folder` set, nothing is downloaded and that folder is read, by the build and by
+the check. `make check` fails when a block of a built page does not read exactly its steps file.
+`scripts/steps.py` has the details; `tests/fixtures/steps` holds the files the tests use.
+
 ## The change log page
 
 `make changelog` builds it into `build/changelog/` (`scripts/changelog.py` with the page in

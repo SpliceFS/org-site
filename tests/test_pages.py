@@ -16,10 +16,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import changelog  # noqa: E402  (the path above must be set first)
 import pages  # noqa: E402
+import steps  # noqa: E402
 
 BUILT = pathlib.Path(tempfile.mkdtemp())
 atexit.register(shutil.rmtree, BUILT, ignore_errors=True)
-pages.build(pages.SITE, pages.PARTS, BUILT)
+# The steps files of the packages repository: the fixtures stand in for the download.
+STEPS = ROOT / "tests" / "fixtures" / "steps"
+pages.build(pages.SITE, pages.PARTS, BUILT, STEPS)
 (BUILT / "changelog").mkdir()
 (BUILT / "changelog" / "index.html").write_text(
     changelog.build(ROOT / "tests" / "fixtures"), encoding="utf-8"
@@ -58,7 +61,7 @@ class TestPages(unittest.TestCase):
     def test_no_marker_is_left_in_a_built_page(self):
         for page in PAGES:
             with self.subTest(page=str(page.relative_to(BUILT))):
-                self.assertNotRegex(page.read_text(encoding="utf-8"), r"<!-- (part|fill|end fill)\b")
+                self.assertNotRegex(page.read_text(encoding="utf-8"), r"<!-- (part|fill|end fill|steps)\b")
 
     def test_every_page_has_the_menu_and_the_footer(self):
         for page in PAGES:
@@ -66,6 +69,17 @@ class TestPages(unittest.TestCase):
                 text = page.read_text(encoding="utf-8")
                 self.assertEqual(text.count('<nav class="nav"'), 1)
                 self.assertIn("SpliceFS is open source under the MIT license.", text)
+
+    def test_every_filled_code_block_reads_its_steps_file(self):
+        for page in PAGES:
+            source = pages.SITE / page.relative_to(BUILT)
+            if not source.is_file():
+                continue
+            with self.subTest(page=str(page.relative_to(BUILT))):
+                found = steps.problems(
+                    source.read_text(encoding="utf-8"), page.read_text(encoding="utf-8"), STEPS
+                )
+                self.assertEqual(found, [])
 
     def test_the_current_page_is_the_only_one_marked_in_the_menu(self):
         for page in PAGES:
@@ -82,6 +96,21 @@ class TestPages(unittest.TestCase):
                 text = page.read_text(encoding="utf-8")
                 self.assertNotIn('<nav class="nav"', text)
                 self.assertNotIn('<header class="top">', text)
+
+
+# The steps file that uninstalls on each system: the packaging family of the system.
+UNINSTALL = {
+    "debian": "apt", "ubuntu": "apt", "rhel": "dnf", "rocky": "dnf", "almalinux": "dnf",
+    "amazon": "dnf", "opensuse": "zypper", "alpine": "apk", "freebsd": "pkg",
+}
+
+
+UNINSTALL_DETAILS = re.compile(r'<details id="\w+-uninstall">(.*?)</details>', re.DOTALL)
+
+
+def shown(name):
+    """The code block of a steps file, as a built page holds it."""
+    return f"<pre><code>{steps.block(name, STEPS)}</code></pre>"
 
 
 class TestInstallPage(unittest.TestCase):
@@ -107,6 +136,31 @@ class TestInstallPage(unittest.TestCase):
             for number, step in enumerate(steps, 1):
                 with self.subTest(system=system, step=number):
                     self.assertIn("<pre><code>", step)
+
+    def test_each_system_shows_the_uninstall_steps_of_its_family_from_the_steps_file(self):
+        for system, body in self.systems():
+            with self.subTest(system=system):
+                family = UNINSTALL[system]
+                self.assertEqual(body.count(shown(f"uninstall-{family}")), 1)
+                others = [name for name in set(UNINSTALL.values()) - {family}]
+                for other in others:
+                    self.assertNotIn(shown(f"uninstall-{other}"), body)
+
+    def test_each_system_shows_the_commands_of_a_user_from_the_steps_files(self):
+        for system, body in self.systems():
+            with self.subTest(system=system):
+                self.assertEqual(body.count(shown("user-mode-start")), 1)
+                self.assertEqual(body.count(shown("user-mode-use")), 1)
+
+    def test_the_uninstall_steps_in_the_page_source_are_only_markers(self):
+        # A copy written by hand drifts from the steps file the packages tests run.
+        source = (pages.SITE / "install" / "index.html").read_text(encoding="utf-8")
+        found = UNINSTALL_DETAILS.findall(source)
+        self.assertEqual(len(found), 9)
+        for body in found:
+            with self.subTest(body=body[:80]):
+                self.assertEqual(body.count("<pre>"), 1)
+                self.assertRegex(body, r"<pre><code><!-- steps: uninstall-[a-z]+ --></code></pre>")
 
     def test_the_page_has_one_chooser_and_it_picks_the_system(self):
         page = self.page()
